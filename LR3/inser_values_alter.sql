@@ -143,5 +143,7 @@ INSERT INTO cart (client_id, total_price) VALUES
 (3, 39.99),
 (4, 49.99),
 (5, 24.99);
-*/
 
+ALTER TABLE product_instance
+ALTER COLUMN quantity SET DEFAULT 0;
+*/
