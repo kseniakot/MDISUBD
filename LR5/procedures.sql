@@ -79,15 +79,20 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
     new_order_id INT;
+	cart_total_price DECIMAL(10, 2);
 BEGIN
 
     IF NOT EXISTS (SELECT 1 FROM cart WHERE client_id = p_client_id) THEN
         RAISE EXCEPTION 'No cart found for client with ID %', client_id;
     END IF;
 
+	SELECT total_price INTO cart_total_price
+    FROM cart
+    WHERE client_id = client_id;
+	
     --creating new order
-    INSERT INTO client_order (client_id, pharmacy_id, promocode_id)
-    VALUES (p_client_id, p_pharmacy_id, p_promocode_id)
+    INSERT INTO client_order (client_id, pharmacy_id, promocode_id, total_price)
+    VALUES (p_client_id, p_pharmacy_id, p_promocode_id, cart_total_price)
     RETURNING id INTO new_order_id;
 
     
@@ -108,3 +113,37 @@ $$;
 --DROP PROCEDURE create_order_from_cart(integer,integer,integer);
 --call create_order_from_cart(1, 1, null);
 select * from client_order;
+
+
+CREATE OR REPLACE FUNCTION get_order_details(p_order_id INT)
+RETURNS TABLE (
+    id INT,
+    product_name VARCHAR(100),
+    quantity INT,
+    order_id INT,
+	street VARCHAR(100),
+	building INT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        oi.id,
+        product.name,
+        oi.quantity,
+        oi.order_id,
+		address.street,
+		address.building
+    FROM orderItem oi
+	JOIN product ON product.id = oi.product_id
+	JOIN client_order ci ON ci.id = p_order_id
+	JOIN pharmacy ON pharmacy.id = ci.pharmacy_id
+	JOIN address ON address.id = pharmacy.address_id
+    WHERE oi.order_id = p_order_id;
+	
+END;
+$$ LANGUAGE plpgsql;
+
+select * from client_order;
+SELECT * FROM get_order_details(14);
+
+--DROP FUNCTION get_order_details(integer);

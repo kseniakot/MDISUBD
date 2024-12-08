@@ -63,59 +63,6 @@ join cartItem ON cartItem.cart_id = cart.client_id
 join product ON product.id = cartItem.product_id
 order by cart_id;*/
 
-
---//////////////////////////////////////////
--- THE SAME FOR ORDER
-/*
-
-CREATE OR REPLACE FUNCTION update_order_total()
-RETURNS TRIGGER AS $$
-DECLARE
-    old_total_price DECIMAL(10, 2);
-    new_total_price DECIMAL(10, 2);
-BEGIN
-    
-    SELECT total_price INTO old_total_price
-    FROM client_order
-    WHERE id = COALESCE(NEW.order_id, OLD.order_id);
-
-    UPDATE client_order
-    SET total_price = (
-        SELECT COALESCE(SUM(oi.quantity * p.price), 0)
-        FROM orderItem oi
-        JOIN product p ON oi.product_id = p.id
-        WHERE oi.order_id = COALESCE(NEW.order_id, OLD.order_id)
-    )
-    WHERE id = COALESCE(NEW.order_id, OLD.order_id);
-
-    SELECT total_price INTO new_total_price
-    FROM client_order
-    WHERE id = COALESCE(NEW.order_id, OLD.order_id);
-
-    RAISE NOTICE 'Total price before update: %', old_total_price;
-    RAISE NOTICE 'Total price after update: %', new_total_price;
-
-    RETURN CASE
-        WHEN TG_OP = 'DELETE' THEN OLD
-        ELSE NEW
-    END;
-END;
-$$ LANGUAGE plpgsql;
-*/
-/*
-CREATE TRIGGER recalculate_order_total_on_insert_or_update
-AFTER INSERT OR UPDATE OF quantity
-ON orderItem
-FOR EACH ROW
-EXECUTE FUNCTION update_order_total();
-
-CREATE TRIGGER recalculate_order_total_on_delete
-AFTER DELETE
-ON orderItem
-FOR EACH ROW
-EXECUTE FUNCTION update_order_total();
-*/
-
 --////////////////////////////////
 
 --RECALCULATES QUANTITY OF PRODUCTS IN PHARMACY AFTER CLIENT CREATES OR REMOVES ORDER ITEM
@@ -240,44 +187,54 @@ VALUES ('DEVEN', 'MEHTA', '1990-06-21', '123-456-7890', 'd.mehta@tetragoniv.com'
 
 --////////////////////////
 
+
 --UPADTE CART TOTAL PRICE WHEN PROMOCODE IS ADDED
 
 CREATE OR REPLACE FUNCTION apply_promocode_to_cart()
 RETURNS TRIGGER AS $$
 DECLARE
-    current_discount FLOAT := 0.0; 
+    current_discount FLOAT := 0.0;
 BEGIN
-   
+    
     IF NEW.promocode_id IS DISTINCT FROM OLD.promocode_id THEN
         
-        UPDATE cart
-        SET total_price = (
-            SELECT COALESCE(SUM(ci.quantity * p.price), 0)
-            FROM cartItem ci
-            JOIN product p ON ci.product_id = p.id
-            WHERE ci.cart_id = NEW.client_id
+        
+        UPDATE cartItem
+        SET price = (
+            SELECT p.price
+            FROM product p
+            WHERE p.id = cartItem.product_id
         )
-        WHERE client_id = NEW.client_id;
+        WHERE cart_id = NEW.client_id;
 
-       
         IF NEW.promocode_id IS NOT NULL THEN
+            
             SELECT CAST(discount AS FLOAT) / 100 INTO current_discount
             FROM promocode
             WHERE id = NEW.promocode_id;
 
-            RAISE NOTICE 'Discount: %', current_discount;
+            RAISE NOTICE 'Discount applied: %', current_discount;
 
-        
-            UPDATE cart
-            SET total_price = total_price - (total_price * current_discount)
-            WHERE client_id = NEW.client_id;
+            
+            UPDATE cartItem
+            SET price = price - (price * current_discount)
+            WHERE cart_id = NEW.client_id;
         END IF;
+
+        UPDATE cart
+        SET total_price = (
+            SELECT COALESCE(SUM(ci.quantity * ci.price), 0)
+            FROM cartItem ci
+            WHERE ci.cart_id = NEW.client_id
+        )
+        WHERE client_id = NEW.client_id;
 
     END IF;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 /*
 CREATE TRIGGER recalculate_cart_total_on_promocode
@@ -292,5 +249,4 @@ where client_id = 1;
 */
 --select * from cart;
 --select * from promocode;
-
 
