@@ -76,8 +76,11 @@ CREATE TABLE orderItem (
     id SERIAL PRIMARY KEY,
     product_id INT REFERENCES product(id),
     quantity INT NOT NULL,
-    order_id INT REFERENCES client_order(id)
+    order_id INT NOT NULL,
+    order_date TIMESTAMP NOT NULL,
+    FOREIGN KEY (order_id, order_date) REFERENCES client_order(id, order_date) ON DELETE CASCADE
 );
+
 
 CREATE TABLE review (
     id SERIAL PRIMARY KEY,
