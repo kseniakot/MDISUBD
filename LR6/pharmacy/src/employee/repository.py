@@ -53,9 +53,22 @@ class EmployeeRepository(BaseRepository):
 
     @classmethod
     async def find_all(cls, session: AsyncSession):
-        rows = (await super().find_all(session))
-        if rows:
-            return [await cls.to_employee_object(session, row) for row in rows]
+        query = text("SELECT * FROM employee JOIN role ON employee.role_id = role.id")
+        rows = (await session.execute(query)).fetchall()
+        employees = []
+        for row in rows:
+            role = Role(id=row[7], name=row[8], description=row[9])
+            employee = Employee(
+                id=row[0],
+                role=role,
+                first_name=row[2],
+                last_name=row[3],
+                phone=row[4],
+                email=row[5],
+                password=row[6]
+            )
+            employees.append(employee)
+        return employees
 
 
 class RoleRepository(BaseRepository):
