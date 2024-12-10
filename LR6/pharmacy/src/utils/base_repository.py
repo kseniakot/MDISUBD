@@ -20,18 +20,15 @@ class BaseRepository:
 
     @classmethod
     async def add_one(cls, session: AsyncSession, values: dict):
-        print(f"values: {values}")
+
         columns = ", ".join(values.keys())
         placeholders = ", ".join([f":{key}" for key in values.keys()])
-        print(f"columns: {columns}", f"placeholders: {placeholders}")
         query = text(f"INSERT INTO {cls.__tablename__} ({columns}) VALUES ({placeholders}) RETURNING *")
         try:
             result = await cls.execute_raw_sql(session, query, values, fetch_one=True)
-            print(f"result: {result}")
             await session.commit()
             return result
         except SQLAlchemyError as e:
-            print(f"Error adding one: {e}")
             await session.rollback()
             return None
 

@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.auth.router import auth_router
 from client.router import client_router
-
+from employee.router import employee_router
 
 def create_fastapi_app():
     app = FastAPI(title="FastAPI")
@@ -26,6 +26,8 @@ def create_fastapi_app():
 app = create_fastapi_app()
 app.include_router(auth_router)
 app.include_router(client_router)
+app.include_router(employee_router)
+
 
 if __name__ == "__main__":
     uvicorn.run(

@@ -33,10 +33,19 @@ class EmployeeRepository(BaseRepository):
 
     @classmethod
     async def add_one(cls, session: AsyncSession, values: dict):
+        role = await RoleRepository.find_one_by_name(session, values.get("role_id"))
+        if not role:
+            raise ValueError("Role not found")
+        values["role_id"] = role.id
         row = (await super().add_one(session, values))
         if row:
-            return cls.to_employee_object(session, row)
-        return None
+            return await cls.to_employee_object(session, row)
+
+    @classmethod
+    async def find_all(cls, session: AsyncSession):
+        rows = (await super().find_all(session))
+        if rows:
+            return [await cls.to_employee_object(session, row) for row in rows]
 
 
 class RoleRepository(BaseRepository):
@@ -63,3 +72,14 @@ class RoleRepository(BaseRepository):
         if row:
             return cls.to_role_object(row)
         return None
+
+    @classmethod
+    async def find_one_by_name(cls, session: AsyncSession, name: str):
+        query = text(f"SELECT * FROM {cls.__tablename__} WHERE name = :name")
+        try:
+            result = await cls.execute_raw_sql(session, query, {"name": name}, fetch_one=True)
+            if result:
+                return cls.to_role_object(result)
+        except SQLAlchemyError as e:
+            print(f"Error finding one by name: {e}")
+            return None

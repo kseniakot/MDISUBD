@@ -18,4 +18,9 @@ class EmployeeService:
         result = await EmployeeRepository.find_one_or_none_by_email(session, email)
         return result
 
+    @staticmethod
+    @connection
+    async def add_employee(employee: dict, session: AsyncSession):
+        result = await EmployeeRepository.add_one(session, employee)
+        return result
 

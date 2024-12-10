@@ -11,6 +11,7 @@ from src.utils.config import settings
 from src.client.service import ClientService
 from src.employee.service import EmployeeService
 
+
 class LoggingOAuth2PasswordBearer(OAuth2PasswordBearer):
     async def __call__(self, request: Request):
         token = await super().__call__(request)
@@ -37,9 +38,9 @@ def get_password_hash(password):
 
 
 def create_access_token(
-    data: dict,
-    user_role: str | None = None,
-    expires_delta: timedelta | None = None,
+        data: dict,
+        user_role: str | None = None,
+        expires_delta: timedelta | None = None,
 ):
     to_encode = data.copy()
     scopes = [user_role]
@@ -79,8 +80,8 @@ async def validate_token_and_return_scopes(token: str = Depends(oauth2_scheme)):
 
 
 async def role_required(
-    security_scopes: SecurityScopes,
-    token_data: tuple = Depends(validate_token_and_return_scopes),
+        security_scopes: SecurityScopes,
+        token_data: tuple = Depends(validate_token_and_return_scopes),
 ):
     scopes = token_data
 
