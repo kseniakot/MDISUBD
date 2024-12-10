@@ -8,6 +8,7 @@ from src.utils.sql_enums import RoleEnum
 
 class SEmployeeAuth(BaseModel):
     model_config = ConfigDict(from_attributes=True, extra='forbid')
+    id: int = Field(1, description="User's id")
     role: RoleEnum = Field("admin", description="User's role")
     first_name: str = Field("Ivan", max_length=120,
                             description="First name of new user")

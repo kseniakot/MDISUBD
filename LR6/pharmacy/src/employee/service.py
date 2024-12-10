@@ -24,3 +24,9 @@ class EmployeeService:
         result = await EmployeeRepository.add_one(session, employee)
         return result
 
+    @staticmethod
+    @connection
+    async def update_employee_by_id(employee_id: int, employee: dict, session: AsyncSession):
+        result = await EmployeeRepository.update_one(session, employee_id, employee)
+        return result
+

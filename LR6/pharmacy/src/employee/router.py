@@ -40,3 +40,15 @@ async def register_user(
             detail="Error creating user",
         )
     return SEmployeeAuth.model_validate(new_user.to_auth_dict())
+
+
+@employee_router.put("/update/employee/{employee_id}", description="Update employee", response_model=None)
+async def update_user(
+        employee_id: int,
+        new_employee: SEmployeeCreate = Depends(),
+        security_scopes=Security(role_required, scopes=["admin"]),
+) -> SEmployeeAuth:
+    result = await EmployeeService.update_employee_by_id(
+        employee_id=employee_id, employee=new_employee.model_dump()
+    )
+    return SEmployeeAuth.model_validate(result.to_auth_dict())

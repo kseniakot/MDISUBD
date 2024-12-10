@@ -42,6 +42,16 @@ class EmployeeRepository(BaseRepository):
             return await cls.to_employee_object(session, row)
 
     @classmethod
+    async def update_one(cls, session: AsyncSession, id: int, values: dict):
+        role = await RoleRepository.find_one_by_name(session, values.get("role_id"))
+        if not role:
+            raise ValueError("Role not found")
+        values["role_id"] = role.id
+        row = (await super().update_one(session, id, values))
+        if row:
+            return await cls.to_employee_object(session, row)
+
+    @classmethod
     async def find_all(cls, session: AsyncSession):
         rows = (await super().find_all(session))
         if rows:
