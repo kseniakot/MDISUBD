@@ -8,8 +8,8 @@ from jwt import InvalidTokenError
 from passlib.context import CryptContext
 
 from src.utils.config import settings
-from src.service import ClientService
-
+from src.client.service import ClientService
+from src.employee.service import EmployeeService
 
 class LoggingOAuth2PasswordBearer(OAuth2PasswordBearer):
     async def __call__(self, request: Request):
@@ -22,7 +22,6 @@ oauth2_scheme = LoggingOAuth2PasswordBearer(
     scopes={
         "admin": "Admin access",
         "employee": "Employee access",
-        "client": "Client access",
     },
 )
 
@@ -73,7 +72,8 @@ async def validate_token_and_return_scopes(token: str = Depends(oauth2_scheme)):
     except InvalidTokenError:
         raise credentials_exception
     user = await ClientService.get_client_by_email(email=username)
-    if user is None:
+    employee = await EmployeeService.get_employee_by_email(email=username)
+    if user is None and employee is None:
         raise credentials_exception
     return scopes
 

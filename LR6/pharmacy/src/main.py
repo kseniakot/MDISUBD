@@ -1,11 +1,12 @@
-import asyncio
 import os
 import sys
+
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.router import router_clients
+from src.auth.router import auth_router
+from client.router import client_router
 
 
 def create_fastapi_app():
@@ -23,7 +24,8 @@ def create_fastapi_app():
 
 
 app = create_fastapi_app()
-app.include_router(router_clients)
+app.include_router(auth_router)
+app.include_router(client_router)
 
 if __name__ == "__main__":
     uvicorn.run(

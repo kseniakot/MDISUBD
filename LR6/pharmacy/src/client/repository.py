@@ -1,7 +1,8 @@
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.base_repository import BaseRepository
-from models import Client
+from src.models import Client
 
 
 class ClientRepository(BaseRepository):
@@ -21,10 +22,14 @@ class ClientRepository(BaseRepository):
 
     @classmethod
     async def find_one_or_none_by_email(cls, session: AsyncSession, email: str):
-        row = (await super().find_one_or_none_by_email(session, email))
-        if row:
-            return cls.to_client_object(row)
-        return None
+        query = text(f"SELECT * FROM {cls.__tablename__} WHERE email = :email")
+        try:
+            result = await cls.execute_raw_sql(session, query, {"email": email}, fetch_one=True)
+            if result:
+                return cls.to_client_object(result)
+        except SQLAlchemyError as e:
+            print(f"Error finding one by email: {e}")
+            return None
 
     @classmethod
     async def add_one(cls, session: AsyncSession, values: dict):
@@ -32,3 +37,12 @@ class ClientRepository(BaseRepository):
         if row:
             return cls.to_client_object(row)
         return None
+
+    @classmethod
+    async def find_all(cls, session: AsyncSession):
+        rows = (await super().find_all(session))
+        if rows:
+            return [cls.to_client_object(row) for row in rows]
+        return None
+
+

@@ -26,16 +26,16 @@ class Manufacturer:
 
 
 class Product:
-    def __init__(self, id: int, name: str, description_id: Optional[int], price: Decimal,
-                 product_type_id: Optional[int], photo: Optional[str], manufacturer_id: Optional[int],
+    def __init__(self, id: int, name: str, description: Optional[Description], price: Decimal,
+                 product_type: ProductType, photo: Optional[str], manufacturer: Manufacturer,
                  analog_code: Optional[int]):
         self.id = id
         self.name = name
-        self.description_id = description_id
+        self.description = description
         self.price = price
-        self.product_type_id = product_type_id
+        self.product_type_id = product_type
         self.photo = photo
-        self.manufacturer_id = manufacturer_id
+        self.manufacturer_id = manufacturer
         self.analog_code = analog_code
 
 
@@ -47,17 +47,17 @@ class Address:
 
 
 class Pharmacy:
-    def __init__(self, id: int, address_id: Optional[int]):
+    def __init__(self, id: int, address: Address):
         self.id = id
-        self.address_id = address_id
+        self.address = address
 
 
 class ProductInstance:
-    def __init__(self, id: int, product_id: int, quantity: int, pharmacy_id: int):
+    def __init__(self, id: int, product: Product, quantity: int, pharmacy: Pharmacy):
         self.id = id
-        self.product_id = product_id
+        self.product = product
         self.quantity = quantity
-        self.pharmacy_id = pharmacy_id
+        self.pharmacy = pharmacy
 
 
 class Promocode:
@@ -79,47 +79,47 @@ class Client:
         self.password = password
 
 
-class ClientOrder:
-    def __init__(self, id: int, status: str, client_id: int, order_date: datetime, promocode_id: Optional[int],
-                 total_price: Optional[Decimal], pharmacy_id: Optional[int]):
+class Order:
+    def __init__(self, id: int, status: str, client: Client, order_date: datetime, promocode: Promocode,
+                 total_price: Optional[Decimal], pharmacy: Pharmacy):
         self.id = id
         self.status = status
-        self.client_id = client_id
+        self.client = client
         self.order_date = order_date
-        self.promocode_id = promocode_id
+        self.promocode = promocode
         self.total_price = total_price
-        self.pharmacy_id = pharmacy_id
+        self.pharmacy = pharmacy
 
 
 class OrderItem:
-    def __init__(self, id: int, product_id: int, quantity: int, order_id: int):
+    def __init__(self, id: int, product: Product, quantity: int, order: Order):
         self.id = id
-        self.product_id = product_id
+        self.product = product
         self.quantity = quantity
-        self.order_id = order_id
+        self.order = order
 
 
 class Review:
-    def __init__(self, id: int, client_id: int, rating: int, text: Optional[str], date: datetime):
+    def __init__(self, id: int, client: Client, rating: int, text: Optional[str], date: datetime):
         self.id = id
-        self.client_id = client_id
+        self.client = client
         self.rating = rating
         self.text = text
         self.date = date
 
 
 class Cart:
-    def __init__(self, client_id: int, total_price: Decimal):
-        self.client_id = client_id
+    def __init__(self, client: Client, total_price: Decimal):
+        self.client = client
         self.total_price = total_price
 
 
 class CartItem:
-    def __init__(self, id: int, product_id: int, quantity: int, cart_id: int):
+    def __init__(self, id: int, product: Product, quantity: int, cart: Cart):
         self.id = id
-        self.product_id = product_id
+        self.product = product
         self.quantity = quantity
-        self.cart_id = cart_id
+        self.cart = cart
 
 
 class Role:
@@ -130,16 +130,25 @@ class Role:
 
 
 class Employee:
-    def __init__(self, id: int, role_id: int, first_name: str, last_name: str, phone: Optional[str], email: str,
-                 date_of_birth: date, password: str):
+    def __init__(self, id: int, role: Role, first_name: str, last_name: str, phone: Optional[str], email: str,
+                 password: str):
         self.id = id
-        self.role_id = role_id
-        self.date_of_birth = date_of_birth
+        self.role = role
         self.first_name = first_name
         self.last_name = last_name
         self.phone = phone
         self.email = email
         self.password = password
+
+    def to_auth_dict(self):
+
+        return {
+            "role": self.role.name,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "phone": self.phone,
+            "email": self.email
+        }
 
 
 class Action:
@@ -151,8 +160,8 @@ class Action:
 
 
 class Logs:
-    def __init__(self, id: int, employee_id: int, action_id: int, action_date: datetime):
+    def __init__(self, id: int, employee: Employee, action: Action, action_date: datetime):
         self.id = id
-        self.employee_id = employee_id
-        self.action_id = action_id
+        self.employee = employee
+        self.action = action
         self.action_date = action_date

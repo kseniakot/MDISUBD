@@ -1,8 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.utils.database import connection
-from src.repository import ClientRepository
-from datetime import date
+from src.client.repository import ClientRepository
 
 
 class ClientService:
@@ -14,7 +13,7 @@ class ClientService:
 
     @staticmethod
     @connection
-    async def get_clients(session: AsyncSession):
+    async def get_all_clients(session: AsyncSession):
         result = await ClientRepository.find_all(session)
         return result
 

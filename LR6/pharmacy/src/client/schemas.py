@@ -45,11 +45,3 @@ class SClientAuth(BaseModel):
     email: EmailStr = Field("email@example.com", description="User's email")
 
 
-class SToken(BaseModel):
-    access_token: str
-    refresh_token: str
-    token_type: str
-
-
-class STokenData(BaseModel):
-    username: str | None = None

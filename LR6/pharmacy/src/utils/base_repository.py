@@ -80,12 +80,4 @@ class BaseRepository:
             await session.rollback()
             return None
 
-    @classmethod
-    async def find_one_or_none_by_email(cls, session: AsyncSession, email: str):
-        query = text(f"SELECT * FROM {cls.__tablename__} WHERE email = :email")
-        try:
-            result = await cls.execute_raw_sql(session, query, {"email": email}, fetch_one=True)
-            return result
-        except SQLAlchemyError as e:
-            print(f"Error finding one by email: {e}")
-            return None
+
