@@ -52,3 +52,12 @@ async def update_user(
         employee_id=employee_id, employee=new_employee.model_dump()
     )
     return SEmployeeAuth.model_validate(result.to_auth_dict())
+
+
+@employee_router.delete("/delete/employee/{employee_id}", description="Delete employee", response_model=None)
+async def delete_user(
+        employee_id: int,
+        security_scopes=Security(role_required, scopes=["admin"]),
+) -> SEmployeeAuth:
+    deleted_employee = await EmployeeService.delete_employee_by_id(employee_id=employee_id)
+    return SEmployeeAuth.model_validate(deleted_employee.to_auth_dict())

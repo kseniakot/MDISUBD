@@ -16,8 +16,8 @@ class ProductType:
 
 
 class Manufacturer:
-    def __init__(self, id: int, name: str, phone: Optional[str] = None, email: Optional[str] = None,
-                 country: Optional[str] = None):
+    def __init__(self, id: int, name: str, phone: str | None, email: str | None,
+                 country: str | None):
         self.id = id
         self.name = name
         self.phone = phone
@@ -26,9 +26,9 @@ class Manufacturer:
 
 
 class Product:
-    def __init__(self, id: int, name: str, description: Optional[Description], price: Decimal,
-                 product_type: ProductType, photo: Optional[str], manufacturer: Manufacturer,
-                 analog_code: Optional[int]):
+    def __init__(self, id: int, name: str, description: Description, price: Decimal,
+                 product_type: ProductType, photo: str | None, manufacturer: Manufacturer,
+                 analog_code: int | None):
         self.id = id
         self.name = name
         self.description = description
@@ -68,7 +68,7 @@ class Promocode:
 
 
 class Client:
-    def __init__(self, id: int, first_name: str, last_name: str, date_of_birth: Optional[date], phone: Optional[str],
+    def __init__(self, id: int, first_name: str, last_name: str, date_of_birth: date | None, phone: str | None,
                  email: str, password: str):
         self.id = id
         self.first_name = first_name
@@ -81,7 +81,7 @@ class Client:
 
 class Order:
     def __init__(self, id: int, status: str, client: Client, order_date: datetime, promocode: Promocode,
-                 total_price: Optional[Decimal], pharmacy: Pharmacy):
+                 total_price: Decimal | None, pharmacy: Pharmacy):
         self.id = id
         self.status = status
         self.client = client
@@ -100,7 +100,7 @@ class OrderItem:
 
 
 class Review:
-    def __init__(self, id: int, client: Client, rating: int, text: Optional[str], date: datetime):
+    def __init__(self, id: int, client: Client, rating: int, text: str | None, date: datetime):
         self.id = id
         self.client = client
         self.rating = rating
@@ -123,14 +123,14 @@ class CartItem:
 
 
 class Role:
-    def __init__(self, id: int, name: str, description: Optional[str] = None):
+    def __init__(self, id: int, name: str, description: str | None):
         self.id = id
         self.name = name
         self.description = description
 
 
 class Employee:
-    def __init__(self, id: int, role: Role, first_name: str, last_name: str, phone: Optional[str], email: str,
+    def __init__(self, id: int, role: Role, first_name: str, last_name: str, phone: str, email: str,
                  password: str):
         self.id = id
         self.role = role
@@ -143,6 +143,7 @@ class Employee:
     def to_auth_dict(self):
 
         return {
+            "id": self.id,
             "role": self.role.name,
             "first_name": self.first_name,
             "last_name": self.last_name,
@@ -152,7 +153,7 @@ class Employee:
 
 
 class Action:
-    def __init__(self, id: int, name: str, description: Optional[str], table_name: Optional[str]):
+    def __init__(self, id: int, name: str, description: str, table_name: str):
         self.id = id
         self.name = name
         self.description = description

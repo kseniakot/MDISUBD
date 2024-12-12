@@ -70,6 +70,12 @@ class EmployeeRepository(BaseRepository):
             employees.append(employee)
         return employees
 
+    @classmethod
+    async def delete_one(cls, session: AsyncSession, id: int):
+        row = (await super().delete_one(session, id))
+        if row:
+            return await cls.to_employee_object(session, row)
+
 
 class RoleRepository(BaseRepository):
     __tablename__ = "role"

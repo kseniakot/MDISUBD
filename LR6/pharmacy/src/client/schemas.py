@@ -16,10 +16,10 @@ class SClientCreate(BaseModel):
 
     date_of_birth: date = Field("2004-11-07", description="User's birth date", examples=["YYYY-MM-DD"])
     phone: str = Field("+375336205338", description="User's phone number")
-    email: EmailStr = Field("email@example.com", description="User's email")
+    email: EmailStr = Field(..., example="email@example.com", description="User's email")
 
     @classmethod
-    @field_validator("birth_date", mode='before')
+    @field_validator("date_of_birth", mode='before')
     def check_birth_date(cls, value: date):
         if value and value >= datetime.now().date():
             raise ValueError("Birth date must be in the past")
