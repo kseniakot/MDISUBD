@@ -48,10 +48,14 @@ async def update_user(
         new_employee: SEmployeeCreate = Depends(),
         security_scopes=Security(role_required, scopes=["admin"]),
 ) -> SEmployeeAuth:
-    result = await EmployeeService.update_employee_by_id(
+    updated_employee = await EmployeeService.update_employee_by_id(
         employee_id=employee_id, employee=new_employee.model_dump()
     )
-    return SEmployeeAuth.model_validate(result.to_auth_dict())
+    if not updated_employee:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Employee not found")
+    return SEmployeeAuth.model_validate(updated_employee.to_auth_dict())
 
 
 @employee_router.delete("/delete/employee/{employee_id}", description="Delete employee", response_model=None)
@@ -60,4 +64,8 @@ async def delete_user(
         security_scopes=Security(role_required, scopes=["admin"]),
 ) -> SEmployeeAuth:
     deleted_employee = await EmployeeService.delete_employee_by_id(employee_id=employee_id)
+    if not deleted_employee:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Employee not found")
     return SEmployeeAuth.model_validate(deleted_employee.to_auth_dict())

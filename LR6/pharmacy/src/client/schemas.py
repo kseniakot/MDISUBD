@@ -35,6 +35,7 @@ class SClientCreate(BaseModel):
 
 class SClientAuth(BaseModel):
     model_config = ConfigDict(from_attributes=True, extra='forbid')
+    id: int = Field(description="User's id", example=1)
     first_name: str = Field("Ivan", max_length=120,
                             description="First name of new user")
     last_name: str = Field("Ivanov", max_length=120,

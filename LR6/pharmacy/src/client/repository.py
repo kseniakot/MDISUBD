@@ -29,22 +29,33 @@ class ClientRepository(BaseRepository):
                 return cls.to_client_object(result)
         except SQLAlchemyError as e:
             print(f"Error finding one by email: {e}")
-            return None
 
     @classmethod
     async def add_one(cls, session: AsyncSession, values: dict):
         row = (await super().add_one(session, values))
         if row:
             return cls.to_client_object(row)
-        return None
 
     @classmethod
     async def find_all(cls, session: AsyncSession):
         rows = (await super().find_all(session))
         if rows:
             return [cls.to_client_object(row) for row in rows]
-        return None
 
+    @classmethod
+    async def find_one_or_none(cls, session: AsyncSession, id: int):
+        row = (await super().find_one_or_none(session, id))
+        if row:
+            return cls.to_client_object(row)
 
+    @classmethod
+    async def update_one(cls, session: AsyncSession, id: int, values: dict):
+        row = (await super().update_one(session, id, values))
+        if row:
+            return cls.to_client_object(row)
 
-
+    @classmethod
+    async def delete_one(cls, session: AsyncSession, id: int):
+        row = (await super().delete_one(session, id))
+        if row:
+            return cls.to_client_object(row)
