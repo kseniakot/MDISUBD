@@ -35,3 +35,9 @@ class ProductService:
     async def delete_product_by_id(product_id: int, session: AsyncSession):
         result = await ProductRepository.delete_one(session, product_id)
         return result
+
+    @staticmethod
+    @connection
+    async def get_purchase_info(cls, session: AsyncSession):
+        result = await ProductRepository.get_purchase_info(session)
+        return result

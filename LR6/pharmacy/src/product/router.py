@@ -4,7 +4,7 @@ from src.auth.auth import role_required
 from src.product.service import ProductService
 from fastapi import HTTPException, status, Depends, Request
 from src.auth.auth import get_password_hash
-from src.product.schemas import SProductInfo, SProductCreate
+from src.product.schemas import SProductInfo, SProductCreate, SPurchaseInfo
 
 product_router = APIRouter(prefix="/products", tags=["Manage products"])
 
@@ -46,7 +46,7 @@ async def create_product(product_data: SProductCreate = Depends(),
 
 @product_router.put("/update/{product_id}", description="Update product", response_model=None)
 async def update_product(product_id: int, product: SProductCreate = Depends(),
-security_scopes=Security(role_required, scopes=["admin"])
+                         security_scopes=Security(role_required, scopes=["admin"])
                          ) -> SProductInfo:
     updated_product = await ProductService.update_product_by_id(product_id, product.dict())
     if not updated_product:
@@ -67,3 +67,15 @@ async def delete_product(product_id: int, security_scopes=Security(role_required
             detail="Product not found",
         )
     return SProductInfo.model_validate(deleted_product.to_dict())
+
+
+@product_router.get("/products/purchases", response_model=list[SPurchaseInfo],
+                    description="Get info about products purchases")
+async def get_products_purchases(request: Request) -> list[SPurchaseInfo]:
+    products = await ProductService.get_purchase_info(request)
+    if not products:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Products not found"
+        )
+    return [SPurchaseInfo.model_validate(product) for product in products]

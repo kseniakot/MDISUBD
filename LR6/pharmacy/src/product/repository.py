@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.base_repository import BaseRepository
 from src.models import Product, Manufacturer, ProductType, Description
+from src.product.schemas import SPurchaseInfo
 
 
 class ProductRepository(BaseRepository):
@@ -70,6 +71,58 @@ class ProductRepository(BaseRepository):
         row = await super().delete_one(session, id)
         if row:
             return await cls.to_product_object(session, row)
+
+    @classmethod
+    async def get_purchase_info(cls, session: AsyncSession):
+        query = text(r"""SELECT 
+                                o.id AS order_id,
+                                o.order_date,
+                                o.total_price,
+                                p.name AS product_name,
+                                oi.quantity AS product_quantity,
+                                street, 
+                                building,
+                                CONCAT(c.first_name, ' ', c.last_name) AS client_name,
+                                m.name AS manufacturer_name,
+                                pt.name AS product_type
+                            FROM 
+                                client_order o
+                            JOIN 
+                                orderItem oi ON o.id = oi.order_id
+                            JOIN 
+                                product p ON oi.product_id = p.id
+                            JOIN 
+                                pharmacy ph ON o.pharmacy_id = ph.id
+                            JOIN 
+                                client c ON o.client_id = c.id
+                            JOIN 
+                                manufacturer m ON p.manufacturer_id = m.id
+                            JOIN 
+                                product_type pt ON p.product_type_id = pt.id
+                            JOIN 
+                                address a ON ph.address_id = a.id
+                            ORDER BY 
+                                o.order_date DESC;""")
+        try:
+            rows = (await session.execute(query)).fetchall()
+            if rows:
+                purchase_info_list = []
+                for row in rows:
+                    purchase_info_list.append(SPurchaseInfo(
+                        order_id=row[0],
+                        order_date=row[1].isoformat(),
+                        total_price=row[2],
+                        product_name=row[3],
+                        product_quantity=row[4],
+                        street=row[5],
+                        building=row[6],
+                        client_name=row[7],
+                        manufacturer_name=row[8],
+                        product_type=row[9]
+                    ).model_dump())
+                return purchase_info_list
+        except SQLAlchemyError as e:
+            print(f"Error getting purchase info: {e}")
 
 
 class ManufacturerRepository(BaseRepository):

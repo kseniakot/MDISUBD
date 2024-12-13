@@ -1,5 +1,5 @@
 import re
-
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict, field_validator, EmailStr
 from pydantic import Field
 
@@ -38,3 +38,18 @@ class SProductInfo(BaseModel):
     photo: str | None = Field(None, description="Product photo")
     manufacturer: str = Field(description="Manufacturer", example='1')
     analog_code: int | None = Field(None, description="Analog code")
+
+
+class SPurchaseInfo(BaseModel):
+
+    order_id: int = Field(..., description="ID заказа", example=1)
+    order_date: str = Field(..., description="Дата заказа", example="2023-12-31T23:59:59")
+    total_price: float | None = Field(..., description="Общая стоимость заказа", example=100.50)
+    product_name: str = Field(..., description="Название продукта", example="Vitamin C")
+    product_quantity: int = Field(..., description="Количество продукта", example=2)
+    street: str = Field(..., description="Улица аптеки", example="Main Street")
+    building: int = Field(..., description="Здание аптеки", example=10)
+    client_name: str = Field(..., description="Имя клиента", example="John Doe")
+    manufacturer_name: str = Field(..., description="Название производителя", example="Pharma Inc.")
+    product_type: str = Field(..., description="Тип продукта", example="Medicine")
+
