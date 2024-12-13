@@ -110,3 +110,5 @@ VALUES ( 1, CURRENT_TIMESTAMP, 100.50, 1);*/
 UPDATE product
 SET price = 10.05
 WHERE id = 5;*/
+
+

@@ -51,13 +51,13 @@ AFTER DELETE
 ON cartItem
 FOR EACH ROW
 EXECUTE FUNCTION update_cart_total();
-
 */
+
 
 -- TESTS
 /*insert into cartItem (product_id, quantity, cart_id)
-values (1, 2, 1);*/
-/*
+values (2, 10, 5);
+
 select cart.client_id, cart.total_price, quantity, name, product_id, price  from cart
 join cartItem ON cartItem.cart_id = cart.client_id
 join product ON product.id = cartItem.product_id
@@ -94,7 +94,7 @@ FOR EACH ROW
 EXECUTE FUNCTION update_product_instance();
 */
 
-select pharmacy.id, street, building, quantity, product.name from pharmacy
+select pharmacy.id, street, building, quantity, product.name, product.id from pharmacy
 join address on pharmacy.address_id = address.id
 join product_instance on product_instance.pharmacy_id = pharmacy.id
 join product on product_instance.product_id = product.id
@@ -104,45 +104,14 @@ order by street;
 --alter table client_order alter column order_date SET DEFAULT CURRENT_TIMESTAMP;
 
 /*insert into orderItem (product_id, quantity, order_id)
-values (1, 2, 7);*/
+values (5, 2, 24);*/
 
-/*insert into client_order (status, client_id, pharmacy_id)
-values ('Pending', 2, 1);*/
---delete from orderitem;
---///////////////////////////
+/*insert into client_order (client_id, pharmacy_id)
+values (2, 5);*/
+--delete from orderitem where id = 33;
 
---SAME WHEN ORDER IS CALCELLED
 
-/*
-CREATE OR REPLACE FUNCTION handle_client_order_delete()
-RETURNS TRIGGER AS $$
-BEGIN
-    
-    UPDATE product_instance
-    SET quantity = product_instance.quantity + subquery.quantity
-    FROM (
-        SELECT oi.product_id, oi.quantity, co.pharmacy_id
-        FROM orderItem oi
-        JOIN client_order co ON oi.order_id = co.id
-        WHERE co.id = OLD.id
-    ) AS subquery
-    WHERE product_instance.product_id = subquery.product_id
-      AND product_instance.pharmacy_id = subquery.pharmacy_id;
 
-    
-    DELETE FROM orderItem WHERE order_id = OLD.id;
-
-    RETURN OLD;
-END;
-$$ LANGUAGE plpgsql;
-*/
-
-/*
-CREATE TRIGGER client_order_delete_trigger
-AFTER DELETE ON client_order
-FOR EACH ROW
-EXECUTE FUNCTION handle_client_order_delete();
-*/
 
 --TEST
 
@@ -154,11 +123,11 @@ order by street;
 
 --select * from client_order;
 
-/*insert into client_order (status, client_id, pharmacy_id)
-values ('Pending', 2, 1);*/
+/*insert into client_order (client_id, pharmacy_id)
+values (2, 5);*/
 /*insert into orderItem (product_id, quantity, order_id)
-values (1, 2, 9);*/
-
+values (5, 2, 27);*/
+--delete from client_order where id = 27;
 
 --///////////////
 --CREATE CART FOR ANY NEW CLIENT
@@ -189,7 +158,7 @@ VALUES ('DEVEN', 'MEHTA', '1990-06-21', '123-456-7890', 'd.mehta@tetragoniv.com'
 
 
 --UPADTE CART TOTAL PRICE WHEN PROMOCODE IS ADDED
-
+/*
 CREATE OR REPLACE FUNCTION apply_promocode_to_cart()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -235,7 +204,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
+*/
 /*
 CREATE TRIGGER recalculate_cart_total_on_promocode
 AFTER INSERT OR UPDATE OF promocode_id
@@ -249,4 +218,3 @@ where client_id = 1;
 */
 --select * from cart;
 --select * from promocode;
-
