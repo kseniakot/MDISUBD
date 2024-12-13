@@ -48,6 +48,12 @@ class ProductService:
         result = await ProductRepository.get_stock_info(session, product_name)
         return result
 
+    @staticmethod
+    @connection
+    async def get_all_stock_info(session: AsyncSession):
+        result = await ProductRepository.get_all_stock_info(session)
+        return result
+
 
 class ProductTypeService:
 
@@ -56,3 +62,4 @@ class ProductTypeService:
     async def get_all_product_types(session: AsyncSession):
         result = await ProductRepository.find_all(session)
         return result
+

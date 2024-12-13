@@ -107,6 +107,18 @@ async def get_stock_info(product_name: str,
     return [SStockInfo.model_validate(info) for info in infos]
 
 
+@product_router.get("/products/stock", response_model=list[SStockInfo],
+                    description="Get stock info")
+async def get_stock_info():
+    infos = await ProductService.get_all_stock_info()
+    if not infos:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found"
+        )
+    return [SStockInfo.model_validate(info) for info in infos]
+
+
 @product_router.get("/products/product_types", response_model=list[SProductType],
                     description="Get all product types")
 async def get_all_product_types() -> list[SProductType]:

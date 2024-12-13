@@ -22,19 +22,20 @@ class ProductRepository(BaseRepository):
             photo=row[5],
             analog_code=row[7]
         )
+
     @classmethod
     async def to_purchase_info(cls, row):
         return SPurchaseInfo(
-                        order_id=row[0],
-                        order_date=row[1].isoformat(),
-                        product_name=row[2],
-                        product_quantity=row[3],
-                        street=row[4],
-                        building=row[5],
-                        client_name=row[6],
-                        manufacturer_name=row[7],
-                        product_type=row[8]
-                    ).model_dump()
+            order_id=row[0],
+            order_date=row[1].isoformat(),
+            product_name=row[2],
+            product_quantity=row[3],
+            street=row[4],
+            building=row[5],
+            client_name=row[6],
+            manufacturer_name=row[7],
+            product_type=row[8]
+        ).model_dump()
 
     @classmethod
     async def find_all(cls, session: AsyncSession):
@@ -132,13 +133,15 @@ class ProductRepository(BaseRepository):
     @classmethod
     async def get_stock_info(cls, session: AsyncSession, product_name: str):
         query = text(r"""SELECT 
-                            p.name AS product_name,
+                           p.name AS product_name,
                             pt.name AS type,
                             pi.quantity AS in_stock,
                             a.street AS pharmacy_street,
                             a.building AS pharmacy_building,
                             m.name AS manufacturer,
-                            m.country AS country
+                            m.country AS country,
+                            p.id AS product_id,
+                            p.price AS price
                         FROM 
                             product p
                         JOIN 
@@ -169,12 +172,66 @@ class ProductRepository(BaseRepository):
                         "pharmacy_street": row[3],
                         "pharmacy_building": row[4],
                         "manufacturer_name": row[5],
-                        "manufacturer_country": row[6]
+                        "manufacturer_country": row[6],
+                        "id": row[7],
+                        "price": row[8]
                     })
                 return stock_info_list
         except SQLAlchemyError as e:
             print(f"Error getting stock info: {e}")
             return []
+
+    @classmethod
+    async def get_all_stock_info(cls, session: AsyncSession):
+        query = text(f"""SELECT  
+                        p.name AS product_name,
+                            pt.name AS type,
+                            pi.quantity AS in_stock,
+                            a.street AS pharmacy_street,
+                            a.building AS pharmacy_building,
+                            m.name AS manufacturer,
+                            m.country AS country,
+                            p.id AS product_id,
+                            p.price AS price
+                    FROM 
+                        product p
+                    LEFT JOIN 
+                        product_instance pi ON pi.product_id = p.id
+                    LEFT JOIN 
+                        pharmacy ph ON pi.pharmacy_id = ph.id
+                    LEFT JOIN 
+                        address a ON ph.address_id = a.id
+                    JOIN 
+                        description ON p.description_id = description.id
+                    JOIN 
+                        product_type pt ON p.product_type_id = pt.id
+                     JOIN 
+                        manufacturer m ON p.manufacturer_id = m.id
+                    ORDER BY 
+                        p.name;
+                    """)
+        try:
+
+            rows = (await session.execute(query)).fetchall()
+            print(rows)
+            stock_info_list = []
+            for row in rows:
+                stock_info_list.append({
+                    "product_name": row[0],
+                    "product_type": row[1],
+                    "in_stock": row[2],
+                    "pharmacy_street": row[3],
+                    "pharmacy_building": row[4],
+                    "manufacturer_name": row[5],
+                    "manufacturer_country": row[6],
+                    "id": row[7],
+                    "price": row[8]
+                })
+            return stock_info_list
+
+        except SQLAlchemyError as e:
+            print(f"Error getting all stock info: {e}")
+            return None
 
 
 class ManufacturerRepository(BaseRepository):
