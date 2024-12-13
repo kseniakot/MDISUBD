@@ -6,10 +6,12 @@ class RoleEnum(str, Enum):
     EMPLOYEE = 'employee'
 
 
+class CientRoleEnum(str, Enum):
+    CLIENT = 'client'
+
+
 class StatusEnum(str, Enum):
     PENDING = 'pending'
     COMPLETED = 'completed'
     SHIPPED = 'shipped'
     RECEIVED = 'received'
-
-

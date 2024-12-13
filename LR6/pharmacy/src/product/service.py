@@ -41,3 +41,18 @@ class ProductService:
     async def get_purchase_info(session: AsyncSession, product_id: int | None = None):
         result = await ProductRepository.get_purchase_info(session, product_id)
         return result
+
+    @staticmethod
+    @connection
+    async def get_stock_info(session: AsyncSession, product_name: str):
+        result = await ProductRepository.get_stock_info(session, product_name)
+        return result
+
+
+class ProductTypeService:
+
+    @staticmethod
+    @connection
+    async def get_all_product_types(session: AsyncSession):
+        result = await ProductRepository.find_all(session)
+        return result

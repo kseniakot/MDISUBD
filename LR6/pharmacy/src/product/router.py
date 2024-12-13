@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Security
 from src.auth.auth import role_required
 
-from src.product.service import ProductService
+from src.product.service import ProductService, ProductTypeService
 from fastapi import HTTPException, status, Depends, Request
 from src.auth.auth import get_password_hash
-from src.product.schemas import SProductInfo, SProductCreate, SPurchaseInfo
+from src.product.schemas import SProductInfo, SProductCreate, SPurchaseInfo, SStockInfo, SProductType
 
 product_router = APIRouter(prefix="/products", tags=["Manage products"])
 
@@ -83,7 +83,8 @@ async def get_products_purchases(security_scopes=Security(role_required, scopes=
 
 @product_router.get("/products/purchases/{product_id}", response_model=list[SPurchaseInfo],
                     description="Get info about products purchases")
-async def get_products_purchases(product_id: int, security_scopes=Security(role_required, scopes=["admin"])) -> list[SPurchaseInfo]:
+async def get_products_purchases(product_id: int,
+                                 security_scopes=Security(role_required, scopes=["admin"])) -> list[SPurchaseInfo]:
     products = await ProductService.get_purchase_info(product_id=product_id)
     if not products:
         raise HTTPException(
@@ -91,3 +92,29 @@ async def get_products_purchases(product_id: int, security_scopes=Security(role_
             detail="Products not found"
         )
     return [SPurchaseInfo.model_validate(product) for product in products]
+
+
+@product_router.get("/products/stock/{product_name}", response_model=list[SStockInfo],
+                    description="Get stock info")
+async def get_stock_info(product_name: str,
+                         security_scopes=Security(role_required, scopes=["admin, employee"])):
+    print(product_name)
+    infos = await ProductService.get_stock_info(product_name=product_name.strip())
+    if not infos:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found"
+        )
+    return [SStockInfo.model_validate(info) for info in infos]
+
+
+@product_router.get("/products/product_types", response_model=list[SProductType],
+                    description="Get all product types")
+async def get_all_product_types() -> list[SProductType]:
+    product_types = await ProductTypeService.get_all_product_types()
+    if not product_types:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product types not found"
+        )
+    return [SProductType.model_validate(product_type.to_dict()) for product_type in product_types]

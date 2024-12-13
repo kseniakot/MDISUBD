@@ -53,9 +53,12 @@ async def update_employee(
         new_employee: SEmployeeCreate = Depends(),
         security_scopes=Security(role_required, scopes=["admin"]),
 ) -> SEmployeeAuth:
+    hashed_password = get_password_hash(new_employee.password)
+
+    new_employee_data = new_employee.model_dump()
+    new_employee_data["password"] = hashed_password
     updated_employee = await EmployeeService.update_employee_by_id(
-        employee_id=employee_id, employee=new_employee.model_dump()
-    )
+        employee_id=employee_id, employee=new_employee_data)
     if not updated_employee:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

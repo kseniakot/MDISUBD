@@ -1,4 +1,5 @@
 from sqlalchemy import text
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 from src.utils.base_repository import BaseRepository
@@ -126,6 +127,53 @@ class ProductRepository(BaseRepository):
                 return purchase_info_list
         except SQLAlchemyError as e:
             print(f"Error getting purchase info: {e}")
+            return []
+
+    @classmethod
+    async def get_stock_info(cls, session: AsyncSession, product_name: str):
+        query = text(r"""SELECT 
+                            p.name AS product_name,
+                            pt.name AS type,
+                            pi.quantity AS in_stock,
+                            a.street AS pharmacy_street,
+                            a.building AS pharmacy_building,
+                            m.name AS manufacturer,
+                            m.country AS country
+                        FROM 
+                            product p
+                        JOIN 
+                            product_instance pi ON p.id = pi.product_id
+                        JOIN 
+                            pharmacy ph ON pi.pharmacy_id = ph.id
+                        JOIN 
+                            address a ON ph.address_id = a.id
+                        JOIN 
+                            manufacturer m ON m.id = p.manufacturer_id
+                        JOIN 
+                            product_type pt ON pt.id = p.product_type_id
+                        WHERE 
+                            p.name ILIKE :product_name
+                            AND pi.quantity > 0; 
+                        """)
+
+        try:
+            rows = (await session.execute(query, {"product_name": f'%{product_name}%'})).fetchall()
+            print(rows)
+            if rows:
+                stock_info_list = []
+                for row in rows:
+                    stock_info_list.append({
+                        "product_name": row[0],
+                        "product_type": row[1],
+                        "in_stock": row[2],
+                        "pharmacy_street": row[3],
+                        "pharmacy_building": row[4],
+                        "manufacturer_name": row[5],
+                        "manufacturer_country": row[6]
+                    })
+                return stock_info_list
+        except SQLAlchemyError as e:
+            print(f"Error getting stock info: {e}")
             return []
 
 

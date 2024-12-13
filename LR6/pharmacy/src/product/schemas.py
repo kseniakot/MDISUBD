@@ -11,7 +11,7 @@ class SProductCreate(BaseModel):
                       description="Product name")
     price: float = Field(..., description="Product price", example=10.0)
     product_type_id: int = Field(..., description="Product type id", example='1')
-    photo: str | None= Field(None, description="Product photo")
+    photo: str | None = Field(None, description="Product photo")
     manufacturer_id: int = Field(..., description="Manufacturer id", example='1')
     analog_code: int | None = Field(None, description="Analog code")
 
@@ -41,7 +41,6 @@ class SProductInfo(BaseModel):
 
 
 class SPurchaseInfo(BaseModel):
-
     order_id: int = Field(..., description="ID заказа", example=1)
     order_date: str = Field(..., description="Дата заказа", example="2023-12-31T23:59:59")
     product_name: str = Field(..., description="Название продукта", example="Vitamin C")
@@ -52,3 +51,18 @@ class SPurchaseInfo(BaseModel):
     manufacturer_name: str = Field(..., description="Название производителя", example="Pharma Inc.")
     product_type: str = Field(..., description="Тип продукта", example="Medicine")
 
+
+class SStockInfo(BaseModel):
+    product_name: str = Field(..., description="Название продукта", example="Vitamin C")
+    product_type: str = Field(..., description="Тип продукта", example="Medicine")
+    in_stock: int = Field(..., description="Количество продукта", example=2)
+    pharmacy_street: str = Field(..., description="Улица аптеки", example="Main Street")
+    pharmacy_building: int = Field(..., description="Здание аптеки", example=10)
+    manufacturer_name: str = Field(..., description="Название производителя", example="Pharma Inc.")
+    manufacturer_country: str = Field(..., description="Страна производителя", example="USA")
+
+
+class SProductType(BaseModel):
+    id: int = Field(..., description="Product type id", example='1')
+    name: str = Field(..., max_length=120, example='Medicine',
+                      description="Product type name")
