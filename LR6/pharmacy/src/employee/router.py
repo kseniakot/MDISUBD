@@ -13,6 +13,11 @@ async def get_all_users(
         security_scopes=Security(role_required, scopes=["admin"])
 ) -> list[SEmployeeAuth]:
     users = await EmployeeService.get_employees()
+    if not users:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Employees not found"
+        )
     return [SEmployeeAuth.model_validate(user.to_auth_dict()) for user in users]
 
 
@@ -69,3 +74,16 @@ async def delete_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Employee not found")
     return SEmployeeAuth.model_validate(deleted_employee.to_auth_dict())
+
+
+@employee_router.get("/employee/{employee_id}", description="Get employee by id", response_model=SEmployeeAuth)
+async def get_user_by_id(
+        employee_id: int,
+        security_scopes=Security(role_required, scopes=["admin"]),
+) -> SEmployeeAuth:
+    employee = await EmployeeService.get_employee_by_id(employee_id)
+    if not employee:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Employee not found")
+    return SEmployeeAuth.model_validate(employee.to_auth_dict())

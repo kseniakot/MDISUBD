@@ -11,6 +11,8 @@ async def get_all_users(
         security_scopes=Security(role_required, scopes=["admin"])
 ) -> list[SClientAuth]:
     users = await ClientService.get_all_clients()
+    if not users:
+        raise HTTPException(status_code=404, detail="Clients not found")
     return [SClientAuth.model_validate(user) for user in users]
 
 

@@ -33,10 +33,22 @@ class Product:
         self.name = name
         self.description = description
         self.price = price
-        self.product_type_id = product_type
+        self.product_type = product_type
         self.photo = photo
-        self.manufacturer_id = manufacturer
+        self.manufacturer = manufacturer
         self.analog_code = analog_code
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description.name,
+            "price": self.price,
+            "product_type": self.product_type.name,
+            "photo": self.photo,
+            "manufacturer": self.manufacturer.name,
+            "analog_code": self.analog_code
+        }
 
 
 class Address:
@@ -141,7 +153,6 @@ class Employee:
         self.password = password
 
     def to_auth_dict(self):
-
         return {
             "id": self.id,
             "role": self.role.name,

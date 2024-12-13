@@ -11,3 +11,5 @@ class StatusEnum(str, Enum):
     COMPLETED = 'completed'
     SHIPPED = 'shipped'
     RECEIVED = 'received'
+
+

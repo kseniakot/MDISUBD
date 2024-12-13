@@ -56,6 +56,7 @@ class BaseRepository:
     async def update_one(cls, session: AsyncSession, id: int, values: dict):
         columns = ", ".join([f"{key} = :{key}" for key in values.keys()])
         query = text(f"UPDATE {cls.__tablename__} SET {columns} WHERE id = :id RETURNING *")
+        print(query)
         try:
             result = await cls.execute_raw_sql(session, query, {"id": id, **values}, fetch_one=True)
             await session.commit()

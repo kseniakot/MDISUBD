@@ -76,6 +76,12 @@ class EmployeeRepository(BaseRepository):
         if row:
             return await cls.to_employee_object(session, row)
 
+    @classmethod
+    async def find_one_or_none(cls, session: AsyncSession, id: int):
+        row = (await super().find_one_or_none(session, id))
+        if row:
+            return await cls.to_employee_object(session, row)
+
 
 class RoleRepository(BaseRepository):
     __tablename__ = "role"
@@ -93,14 +99,12 @@ class RoleRepository(BaseRepository):
         row = (await super().find_one_or_none(session, id))
         if row:
             return cls.to_role_object(row)
-        return None
 
     @classmethod
     async def add_one(cls, session: AsyncSession, values: dict):
         row = (await super().add_one(session, values))
         if row:
             return cls.to_role_object(row)
-        return None
 
     @classmethod
     async def find_one_by_name(cls, session: AsyncSession, name: str):
@@ -111,4 +115,3 @@ class RoleRepository(BaseRepository):
                 return cls.to_role_object(result)
         except SQLAlchemyError as e:
             print(f"Error finding one by name: {e}")
-            return None

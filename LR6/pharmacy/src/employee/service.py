@@ -35,3 +35,9 @@ class EmployeeService:
     async def delete_employee_by_id(employee_id: int, session: AsyncSession):
         result = await EmployeeRepository.delete_one(session, employee_id)
         return result
+
+    @staticmethod
+    @connection
+    async def get_employee_by_id(employee_id: int, session: AsyncSession):
+        result = await EmployeeRepository.find_one_or_none(session, employee_id)
+        return result
