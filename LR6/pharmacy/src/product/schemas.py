@@ -44,7 +44,6 @@ class SPurchaseInfo(BaseModel):
 
     order_id: int = Field(..., description="ID заказа", example=1)
     order_date: str = Field(..., description="Дата заказа", example="2023-12-31T23:59:59")
-    total_price: float | None = Field(..., description="Общая стоимость заказа", example=100.50)
     product_name: str = Field(..., description="Название продукта", example="Vitamin C")
     product_quantity: int = Field(..., description="Количество продукта", example=2)
     street: str = Field(..., description="Улица аптеки", example="Main Street")

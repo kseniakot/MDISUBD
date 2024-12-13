@@ -21,6 +21,19 @@ class ProductRepository(BaseRepository):
             photo=row[5],
             analog_code=row[7]
         )
+    @classmethod
+    async def to_purchase_info(cls, row):
+        return SPurchaseInfo(
+                        order_id=row[0],
+                        order_date=row[1].isoformat(),
+                        product_name=row[2],
+                        product_quantity=row[3],
+                        street=row[4],
+                        building=row[5],
+                        client_name=row[6],
+                        manufacturer_name=row[7],
+                        product_type=row[8]
+                    ).model_dump()
 
     @classmethod
     async def find_all(cls, session: AsyncSession):
@@ -73,11 +86,10 @@ class ProductRepository(BaseRepository):
             return await cls.to_product_object(session, row)
 
     @classmethod
-    async def get_purchase_info(cls, session: AsyncSession):
+    async def get_purchase_info(cls, session: AsyncSession, product_id: int | None = None):
         query = text(r"""SELECT 
                                 o.id AS order_id,
                                 o.order_date,
-                                o.total_price,
                                 p.name AS product_name,
                                 oi.quantity AS product_quantity,
                                 street, 
@@ -101,28 +113,20 @@ class ProductRepository(BaseRepository):
                                 product_type pt ON p.product_type_id = pt.id
                             JOIN 
                                 address a ON ph.address_id = a.id
-                            ORDER BY 
-                                o.order_date DESC;""")
+                            """
+                     + ("WHERE p.id = :product_id " if product_id is not None else "")
+                     + "ORDER BY o.order_date DESC;")
+
         try:
-            rows = (await session.execute(query)).fetchall()
+            params = {"product_id": product_id} if product_id is not None else {}
+            rows = (await session.execute(query, params)).fetchall()
+
             if rows:
-                purchase_info_list = []
-                for row in rows:
-                    purchase_info_list.append(SPurchaseInfo(
-                        order_id=row[0],
-                        order_date=row[1].isoformat(),
-                        total_price=row[2],
-                        product_name=row[3],
-                        product_quantity=row[4],
-                        street=row[5],
-                        building=row[6],
-                        client_name=row[7],
-                        manufacturer_name=row[8],
-                        product_type=row[9]
-                    ).model_dump())
+                purchase_info_list = [await cls.to_purchase_info(row) for row in rows]
                 return purchase_info_list
         except SQLAlchemyError as e:
             print(f"Error getting purchase info: {e}")
+            return []
 
 
 class ManufacturerRepository(BaseRepository):

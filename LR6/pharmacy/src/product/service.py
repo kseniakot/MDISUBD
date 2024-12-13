@@ -38,6 +38,6 @@ class ProductService:
 
     @staticmethod
     @connection
-    async def get_purchase_info(cls, session: AsyncSession):
-        result = await ProductRepository.get_purchase_info(session)
+    async def get_purchase_info(session: AsyncSession, product_id: int | None = None):
+        result = await ProductRepository.get_purchase_info(session, product_id)
         return result

@@ -71,8 +71,20 @@ async def delete_product(product_id: int, security_scopes=Security(role_required
 
 @product_router.get("/products/purchases", response_model=list[SPurchaseInfo],
                     description="Get info about products purchases")
-async def get_products_purchases(request: Request) -> list[SPurchaseInfo]:
-    products = await ProductService.get_purchase_info(request)
+async def get_products_purchases(security_scopes=Security(role_required, scopes=["admin"])) -> list[SPurchaseInfo]:
+    products = await ProductService.get_purchase_info()
+    if not products:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Products not found"
+        )
+    return [SPurchaseInfo.model_validate(product) for product in products]
+
+
+@product_router.get("/products/purchases/{product_id}", response_model=list[SPurchaseInfo],
+                    description="Get info about products purchases")
+async def get_products_purchases(product_id: int, security_scopes=Security(role_required, scopes=["admin"])) -> list[SPurchaseInfo]:
+    products = await ProductService.get_purchase_info(product_id=product_id)
     if not products:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
