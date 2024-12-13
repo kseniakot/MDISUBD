@@ -97,8 +97,7 @@ async def get_products_purchases(product_id: int,
 @product_router.get("/products/stock/{product_name}", response_model=list[SStockInfo],
                     description="Get stock info")
 async def get_stock_info(product_name: str,
-                         security_scopes=Security(role_required, scopes=["admin, employee"])):
-    print(product_name)
+                         security_scopes=Security(role_required, scopes=["admin", "employee"])):
     infos = await ProductService.get_stock_info(product_name=product_name.strip())
     if not infos:
         raise HTTPException(

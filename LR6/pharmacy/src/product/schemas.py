@@ -9,7 +9,7 @@ class SProductCreate(BaseModel):
     description_id: int = Field(..., description="Description id", example='1')
     name: str = Field(..., max_length=120, example='Vitamin C',
                       description="Product name")
-    price: float = Field(..., description="Product price", example=10.0)
+    price: float = Field(..., description="Product price", example=10.0, min_value=0.0)
     product_type_id: int = Field(..., description="Product type id", example='1')
     photo: str | None = Field(None, description="Product photo")
     manufacturer_id: int = Field(..., description="Manufacturer id", example='1')
@@ -22,6 +22,14 @@ class SProductCreate(BaseModel):
         if not bool(pattern.match(url)):
             raise ValueError('Invalid photo url')
         return url
+
+    @classmethod
+    @field_validator("analog_code", mode='before')
+    def check_analog_code(cls, code: int):
+        pattern = re.compile(r'^\d{4}$')
+        if not bool(pattern.match(str(code))):
+            raise ValueError('Invalid analog code')
+        return code
 
 
 class SProductResult(SProductCreate):
