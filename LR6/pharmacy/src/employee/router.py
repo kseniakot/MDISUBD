@@ -9,7 +9,7 @@ employee_router = APIRouter(prefix="/users", tags=["Manage users"])
 
 
 @employee_router.get("/all/employees", response_model=list[SEmployeeAuth], description="Get all employees")
-async def get_all_users(
+async def get_all_employee(
         security_scopes=Security(role_required, scopes=["admin"])
 ) -> list[SEmployeeAuth]:
     users = await EmployeeService.get_employees()
@@ -22,7 +22,7 @@ async def get_all_users(
 
 
 @employee_router.post("/create/employee", response_model=SEmployeeAuth, description="Create new employee")
-async def register_user(
+async def register_employee(
         employee_data: SEmployeeCreate = Depends(),
         security_scopes=Security(role_required, scopes=["admin"])) -> SEmployeeAuth:
     employee = await EmployeeService.get_employee_by_email(email=employee_data.email)
@@ -48,7 +48,7 @@ async def register_user(
 
 
 @employee_router.put("/update/employee/{employee_id}", description="Update employee", response_model=None)
-async def update_user(
+async def update_employee(
         employee_id: int,
         new_employee: SEmployeeCreate = Depends(),
         security_scopes=Security(role_required, scopes=["admin"]),
@@ -64,7 +64,7 @@ async def update_user(
 
 
 @employee_router.delete("/delete/employee/{employee_id}", description="Delete employee", response_model=None)
-async def delete_user(
+async def delete_employee(
         employee_id: int,
         security_scopes=Security(role_required, scopes=["admin"]),
 ) -> SEmployeeAuth:
@@ -77,7 +77,7 @@ async def delete_user(
 
 
 @employee_router.get("/employee/{employee_id}", description="Get employee by id", response_model=SEmployeeAuth)
-async def get_user_by_id(
+async def get_employee_by_id(
         employee_id: int,
         security_scopes=Security(role_required, scopes=["admin"]),
 ) -> SEmployeeAuth:

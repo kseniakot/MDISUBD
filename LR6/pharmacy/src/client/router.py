@@ -7,7 +7,7 @@ client_router = APIRouter(prefix="/users", tags=["Manage users"])
 
 
 @client_router.get("/all/clients", response_model=list[SClientAuth], description="Get all clients")
-async def get_all_users(
+async def get_all_clients(
         security_scopes=Security(role_required, scopes=["admin"])
 ) -> list[SClientAuth]:
     users = await ClientService.get_all_clients()
