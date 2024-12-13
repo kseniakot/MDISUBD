@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Security, HTTPException, Depends
-from src.auth.auth import role_required
+from src.auth.auth import role_required, validate_token_and_return_id
 from src.client.schemas import SClientAuth, SClientCreate
 from src.client.service import ClientService
 

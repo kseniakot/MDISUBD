@@ -45,21 +45,26 @@ async def login_for_access_token(
 
     if client:
         access_token = create_access_token(
-            data={"sub": client.email},
+            data={"sub": client.email,
+                  "id": client.id},
+
             user_role=None,
             expires_delta=access_token_expires,
         )
         refresh_token = create_access_token(
-            data={"sub": client.email}, expires_delta=timedelta(days=180)
+            data={"sub": client.email,
+                  "id": client.id}, expires_delta=timedelta(days=180)
         )
     elif employee:
         access_token = create_access_token(
-            data={"sub": employee.email},
+            data={"sub": employee.email,
+                  "id": employee.id},
             user_role=employee.role.name,
             expires_delta=access_token_expires,
         )
         refresh_token = create_access_token(
-            data={"sub": employee.email}, expires_delta=timedelta(days=180)
+            data={"sub": employee.email,
+                  "id": employee.id}, expires_delta=timedelta(days=180)
         )
 
     return SToken(
@@ -83,7 +88,8 @@ async def refresh_access_token(refresh_token: str):
         if not client and not employee:
             raise HTTPException(status_code=401, detail="User not found")
 
-        access_token = create_access_token(data={"sub": username})
+        access_token = create_access_token(data={"sub": username,
+                                                 "id": client.id if client else employee.id})
 
         return {
             "access_token": access_token,

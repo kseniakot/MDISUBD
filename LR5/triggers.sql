@@ -218,3 +218,26 @@ where client_id = 1;
 */
 --select * from cart;
 --select * from promocode;
+
+
+CREATE OR REPLACE FUNCTION log_new_client()
+RETURNS TRIGGER AS $$
+DECLARE
+new_log_id INT;
+BEGIN
+
+	INSERT INTO action(name, description, table_name)
+	VALUES ('INSERT', 'new client registered', 'client')
+	returning id into new_log_id;
+    INSERT INTO logs (action_id, client_id, new_value)
+    VALUES (new_log_id, NEW.id, NEW.id);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+/*
+CREATE TRIGGER log_new_client_trigger
+AFTER INSERT ON client
+FOR EACH ROW
+EXECUTE FUNCTION log_new_client();
+*/
+select * from client;

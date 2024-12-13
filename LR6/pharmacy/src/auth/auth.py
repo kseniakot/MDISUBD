@@ -92,3 +92,22 @@ async def role_required(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
+
+
+async def validate_token_and_return_id(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        user_id: int = payload.get("id")
+
+        if id is None:
+            raise credentials_exception
+    except InvalidTokenError:
+        raise credentials_exception
+    return id
