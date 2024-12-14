@@ -16,14 +16,6 @@ select * from promocode;
 where id = 5;*/
 --call delete_expired_promocodes();
 
-CREATE OR REPLACE PROCEDURE delete_product(p_id INT)
-LANGUAGE plpgsql
-AS $$
-BEGIN
-    DELETE FROM Product WHERE id = p_id;
-END;
-$$;
-
 select * from client_order;
 
 CREATE OR REPLACE PROCEDURE create_order_from_cart(
@@ -103,30 +95,6 @@ select * from client_order;
 SELECT * FROM get_order_details(14);
 SELECT * from product;
 
-CREATE OR REPLACE PROCEDURE add_client(
-    p_first_name VARCHAR,
-    p_last_name VARCHAR,
-    p_date_of_birth DATE,
-    p_phone VARCHAR,
-    p_email VARCHAR,
-    p_password VARCHAR
-)
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    client_id INT;
-BEGIN
-
-    INSERT INTO client (first_name, last_name, date_of_birth, phone, email, password)
-    VALUES (p_first_name, p_last_name, p_date_of_birth, p_phone, p_email, p_password)
-    RETURNING id INTO client_id;
-
-    RAISE NOTICE 'Client added with ID: %', client_id;
-END;
-$$;
-
-select * from client;
-
 CREATE OR REPLACE PROCEDURE add_to_cart(
     p_product_id INT,
     p_quantity INT,
@@ -150,4 +118,115 @@ END;
 $$;
 
 --call add_to_cart(2, 3, 24);
+
+
+CREATE OR REPLACE PROCEDURE remove_from_cart(
+    p_product_id INT,
+    p_cart_id INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+   
+    IF EXISTS (
+        SELECT 1 
+        FROM cartitem 
+        WHERE product_id = p_product_id AND cart_id = p_cart_id
+    ) THEN
+       
+        DELETE FROM cartitem 
+        WHERE product_id = p_product_id AND cart_id = p_cart_id;
+    ELSE
+       
+        RAISE EXCEPTION 'Product with ID % not found in cart %', p_product_id, p_cart_id;
+    END IF;
+END;
+$$;
+
+--call remove_from_cart(2, 24);
+call add_to_cart(5, 3, 24);
 select * from cart;
+select * from logs join action on logs.action_id = action.id;
+
+
+CREATE OR REPLACE PROCEDURE decrease_product_quantity(
+    p_product_id INT,
+    p_cart_id INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 
+        FROM cartitem 
+        WHERE product_id = p_product_id AND cart_id = p_cart_id
+    ) THEN
+        UPDATE cartitem
+        SET quantity = quantity - 1
+        WHERE product_id = p_product_id AND cart_id = p_cart_id;
+
+        DELETE FROM cartitem 
+        WHERE product_id = p_product_id AND cart_id = p_cart_id AND quantity <= 0;
+    ELSE
+        RAISE EXCEPTION 'Product with ID % not found in cart %', p_product_id, p_cart_id;
+    END IF;
+END;
+$$;
+--call decrease_product_quantity(2, 24);
+select 
+cart.client_id as cart_id,
+total_price,
+promocode.code as promocode,
+promocode.discount as discount,
+p.id as product_id,
+p.name as product,
+p.price as price,
+cartItem.quantity as quantity
+from cart 
+left JOIN cartitem on cartItem.cart_id = cart.client_id
+join product p on p.id = cartItem.product_id
+left join promocode on promocode.id = cart.promocode_id
+where cart.client_id = 24;
+select * from promocode;
+
+CREATE OR REPLACE PROCEDURE apply_promocode(
+    p_cart_id INT,
+    p_promocode_code VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    discount_value DECIMAL(5, 2);
+    p_promocode_id INT;
+BEGIN
+    
+    SELECT id, discount
+    INTO p_promocode_id, discount_value
+    FROM promocode
+    WHERE code = p_promocode_code;
+
+    IF p_promocode_id IS NULL THEN
+        RAISE EXCEPTION 'Promocode % not found', p_promocode_code;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM cart
+        WHERE client_id = p_cart_id
+    ) THEN
+        RAISE EXCEPTION 'Cart with ID % not found', p_cart_id;
+    END IF;
+
+    UPDATE cart
+    SET 
+        promocode_id = p_promocode_id,
+        total_price = total_price * (1 - discount_value / 100)
+    WHERE client_id = p_cart_id;
+
+    RAISE NOTICE 'Promocode % with discount % applied to cart ID %', 
+        p_promocode_code, discount_value, p_cart_id;
+END;
+$$;
+
+SELECT 	* from cart;
+call apply_promocode(24, 'WINTR2024');

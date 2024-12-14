@@ -219,7 +219,64 @@ where client_id = 1;
 --select * from cart;
 --select * from promocode;
 
+CREATE OR REPLACE FUNCTION log_add_to_cart()
+RETURNS TRIGGER AS $$
+DECLARE
+new_action_id INT;
+BEGIN
+	INSERT INTO action(name, description, table_name)
+	VALUES ('INSERT', 'client added product to the cart', 'cartIitem')
+	returning id into new_action_id;
+	INSERT INTO logs (action_id, client_id, new_value)
+    VALUES (new_action_id, NEW.cart_id, NEW.id);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+/*
+CREATE TRIGGER add_to_cart_trigger
+AFTER INSERT ON cartItem
+FOR EACH ROW
+EXECUTE FUNCTION log_add_to_cart();
+*/
+CREATE OR REPLACE FUNCTION log_update_quantity()
+RETURNS TRIGGER AS $$
+DECLARE
+new_action_id INT;
+BEGIN
+	INSERT INTO action(name, description, table_name)
+	VALUES ('UPDATE', 'client updated product quantity', 'cartIitem')
+	returning id into new_action_id;
+	INSERT INTO logs (action_id, client_id, new_value)
+    VALUES (new_action_id, NEW.cart_id, NEW.id);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+/*
+CREATE TRIGGER update_cart_trigger
+AFTER UPDATE ON cartItem
+FOR EACH ROW
+EXECUTE FUNCTION log_update_quantity();
+*/
 
+CREATE OR REPLACE FUNCTION log_delete_from_cart()
+RETURNS TRIGGER AS $$
+DECLARE
+new_action_id INT;
+BEGIN
+	INSERT INTO action(name, description, table_name)
+	VALUES ('DELETE', 'client deleted product from cart', 'cartIitem')
+	returning id into new_action_id;
+	INSERT INTO logs (action_id, client_id, new_value)
+    VALUES (new_action_id, OLD.cart_id, OLD.id);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+/*
+CREATE TRIGGER delete_from_cart_trigger
+AFTER DELETE ON cartItem
+FOR EACH ROW
+EXECUTE FUNCTION log_delete_from_cart();
+*/
 CREATE OR REPLACE FUNCTION log_new_client()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -242,26 +299,7 @@ EXECUTE FUNCTION log_new_client();
 */
 select * from client;
 
-/*CREATE OR REPLACE FUNCTION log_client_delete()
-RETURNS TRIGGER AS $$
-DECLARE
-new_log_id INT;
-BEGIN
 
-	INSERT INTO action(name, description, table_name)
-	VALUES ('INSERT', 'new client registered', 'client')
-	returning id into new_log_id;
-    INSERT INTO logs (action_id, client_id, new_value)
-    VALUES (new_log_id, NEW.id, NEW.id);
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;*/
-/*
-CREATE TRIGGER log_new_client_trigger
-AFTER INSERT ON client
-FOR EACH ROW
-EXECUTE FUNCTION log_new_client();
-*/
 select * from employee;
 select * from product_instance;
 
@@ -331,3 +369,6 @@ LEFT JOIN
 ORDER BY 
     p.name;
 
+
+select * from logs
+join action on action.id = logs.action_id;
