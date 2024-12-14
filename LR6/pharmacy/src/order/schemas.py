@@ -1,5 +1,7 @@
+from datetime import date
+
 from pydantic import BaseModel, Field
-from typing import Optional
+from src.utils.sql_enums import StatusEnum
 
 
 class SProductDetail(BaseModel):
@@ -11,13 +13,21 @@ class SProductDetail(BaseModel):
 
 class SOrderDetail(BaseModel):
     order_id: int = Field(..., description="ID заказа", example=1)
-    total_price: float = Field(..., description="Общая стоимость заказа", example=200.00)
-    product: SProductDetail = Field(..., description="Информация о продукте")
+    total_price: float | None = Field(..., description="Общая стоимость заказа", example=200.00)
+    product: list[SProductDetail] | None = Field(..., description="Информация о продукте")
+    pharmacy_id: int = Field(..., description="ID аптеки", example=1)
     street: str = Field(..., description="Улица доставки", example="Main Street")
     building: int = Field(..., description="Номер здания", example=10)
-    promocode_name: Optional[str] = Field(None, description="Название промокода, если применён", example="SAVE10")
-    promocode_discount: Optional[int] = Field(None, description="Скидка по промокоду в процентах", example=10)
+    promocode_name: str | None = Field(None, description="Название промокода, если применён", example="SAVE10")
+    promocode_discount: int | None = Field(None, description="Скидка по промокоду в процентах", example=10)
+    status: StatusEnum = Field(..., description="Статус заказа", example="completed")
+    order_date: date = Field(..., description="Дата заказа", example="2022-01-01")
 
 
 class SCreateOrderResponse(BaseModel):
     order_id: int
+
+
+class SChangeOrderStatus(BaseModel):
+    order_id: int = Field(..., description="ID заказа", example=1)
+    status: StatusEnum = Field(..., description="Статус заказа", example="completed")
