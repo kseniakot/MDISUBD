@@ -16,50 +16,6 @@ select * from promocode;
 where id = 5;*/
 --call delete_expired_promocodes();
 
-
-CREATE OR REPLACE PROCEDURE add_product(
-    p_name VARCHAR,
-    p_description TEXT,
-    p_price DECIMAL(10, 2),
-    p_product_type_id INT,
-    p_manufacturer_id INT,
-    p_unit_of_measure_id INT,
-    p_quantity INT
-)
-LANGUAGE plpgsql
-AS $$
-BEGIN
-    INSERT INTO Product (name, description, price, product_type_id, manufacturer_id, unit_of_measure_id, quantity)
-    VALUES (p_name, p_description, p_price, p_product_type_id, p_manufacturer_id, p_unit_of_measure_id, p_quantity);
-END;
-$$;
-
-CREATE OR REPLACE PROCEDURE update_product(
-    p_id INT,
-    p_name VARCHAR,
-    p_description TEXT,
-    p_price DECIMAL(10, 2),
-    p_product_type_id INT,
-    p_manufacturer_id INT,
-    p_unit_of_measure_id INT,
-    p_quantity INT
-)
-LANGUAGE plpgsql
-AS $$
-BEGIN
-    UPDATE Product
-    SET 
-        name = p_name,
-        description = p_description,
-        price = p_price,
-        product_type_id = p_product_type_id,
-        manufacturer_id = p_manufacturer_id,
-        unit_of_measure_id = p_unit_of_measure_id,
-        quantity = p_quantity
-    WHERE id = p_id;
-END;
-$$;
-
 CREATE OR REPLACE PROCEDURE delete_product(p_id INT)
 LANGUAGE plpgsql
 AS $$
@@ -145,5 +101,53 @@ $$ LANGUAGE plpgsql;
 
 select * from client_order;
 SELECT * FROM get_order_details(14);
+SELECT * from product;
 
---DROP FUNCTION get_order_details(integer);
+CREATE OR REPLACE PROCEDURE add_client(
+    p_first_name VARCHAR,
+    p_last_name VARCHAR,
+    p_date_of_birth DATE,
+    p_phone VARCHAR,
+    p_email VARCHAR,
+    p_password VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    client_id INT;
+BEGIN
+
+    INSERT INTO client (first_name, last_name, date_of_birth, phone, email, password)
+    VALUES (p_first_name, p_last_name, p_date_of_birth, p_phone, p_email, p_password)
+    RETURNING id INTO client_id;
+
+    RAISE NOTICE 'Client added with ID: %', client_id;
+END;
+$$;
+
+select * from client;
+
+CREATE OR REPLACE PROCEDURE add_to_cart(
+    p_product_id INT,
+    p_quantity INT,
+    p_cart_id INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Проверяем, существует ли уже этот продукт в корзине
+    IF EXISTS (SELECT 1 FROM cartitem WHERE product_id = p_product_id AND cart_id = p_cart_id) THEN
+        -- Если продукт уже в корзине, увеличиваем количество
+        UPDATE cartitem
+        SET quantity = quantity + p_quantity
+        WHERE product_id = p_product_id AND cart_id = p_cart_id;
+    ELSE
+        -- Если продукта нет, добавляем новую запись
+        INSERT INTO cartitem (product_id, quantity, cart_id)
+        VALUES (p_product_id, p_quantity, p_cart_id);
+    END IF;
+END;
+$$;
+
+--call add_to_cart(2, 3, 24);
+select * from cart;

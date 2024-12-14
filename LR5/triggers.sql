@@ -241,3 +241,93 @@ FOR EACH ROW
 EXECUTE FUNCTION log_new_client();
 */
 select * from client;
+
+/*CREATE OR REPLACE FUNCTION log_client_delete()
+RETURNS TRIGGER AS $$
+DECLARE
+new_log_id INT;
+BEGIN
+
+	INSERT INTO action(name, description, table_name)
+	VALUES ('INSERT', 'new client registered', 'client')
+	returning id into new_log_id;
+    INSERT INTO logs (action_id, client_id, new_value)
+    VALUES (new_log_id, NEW.id, NEW.id);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;*/
+/*
+CREATE TRIGGER log_new_client_trigger
+AFTER INSERT ON client
+FOR EACH ROW
+EXECUTE FUNCTION log_new_client();
+*/
+select * from employee;
+select * from product_instance;
+
+
+/*
+INSERT INTO product_instance (id, product_id, quantity, pharmacy_id)
+VALUES
+    (17, 2, 15, 1), -- Амоксициллин в аптеке на Main Street
+    (18, 3, 10, 2), -- Ибупрофен в аптеке на Baker Street
+    (19, 4, 25, 3), -- Сироп от кашля в аптеке на Elm Street
+    (20, 5, 18, 4), -- Витамин C в аптеке на Oak Avenue
+    (21, 2, 35, 5), -- Амоксициллин в аптеке на Pine Street
+    (22, 3, 50, 1), -- Ибупрофен в аптеке на Main Street
+    (23, 4, 30, 2), -- Сироп от кашля в аптеке на Baker Street
+    (24, 5, 12, 3), -- Витамин C в аптеке на Elm Street
+    (25, 4, 40, 4), -- Сироп от кашля в аптеке на Oak Avenue
+    (26, 2, 28, 5); -- Амоксициллин в аптеке на Pine Street
+
+*/
+
+select * from cartitem;
+
+CREATE OR REPLACE PROCEDURE add_to_cart(
+    p_product_id INT,
+    p_quantity INT,
+    p_cart_id INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Проверяем, существует ли уже этот продукт в корзине
+    IF EXISTS (SELECT 1 FROM cartitem WHERE product_id = p_product_id AND cart_id = p_cart_id) THEN
+        -- Если продукт уже в корзине, увеличиваем количество
+        UPDATE cartitem
+        SET quantity = quantity + p_quantity
+        WHERE product_id = p_product_id AND cart_id = p_cart_id;
+    ELSE
+        -- Если продукта нет, добавляем новую запись
+        INSERT INTO cartitem (product_id, quantity, cart_id)
+        VALUES (p_product_id, p_quantity, p_cart_id);
+    END IF;
+END;
+$$;
+
+SELECT  
+    p.name AS product_name,
+    pt.name AS type,
+    COALESCE(pi.quantity, 0) AS in_stock, -- Если товара нет, показать 0
+    a.street AS pharmacy_street,
+    a.building AS pharmacy_building,
+    m.name AS manufacturer,
+    m.country AS country,
+    p.id AS product_id,
+    p.price AS price
+FROM 
+    product p
+LEFT JOIN 
+    product_instance pi ON pi.product_id = p.id
+LEFT JOIN 
+    pharmacy ph ON pi.pharmacy_id = ph.id
+LEFT JOIN 
+    address a ON ph.address_id = a.id
+LEFT JOIN 
+    product_type pt ON p.product_type_id = pt.id
+LEFT JOIN 
+    manufacturer m ON p.manufacturer_id = m.id
+ORDER BY 
+    p.name;
+
