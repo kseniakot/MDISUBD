@@ -17,7 +17,7 @@ async def add_product_to_cart(user_id: int = Depends(validate_token_and_return_i
     response = await CartService.add_product_to_cart(cart_id=user_id, product=product_data.model_dump())
     if not response:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error adding product to cart")
-    return SResponse(**response)
+    return SResponse.model_validate(response)
 
 
 @cart_router.post("/remove/", description="Remove product from cart")
@@ -28,7 +28,7 @@ async def remove_product_from_cart(user_id: int = Depends(validate_token_and_ret
     response = await CartService.remove_product_from_cart(cart_id=user_id, product_id=product_data.product_id)
     if not response:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error removing product from cart")
-    return SResponse(**response)
+    return SResponse.model_validate(response)
 
 
 @cart_router.post("/decrease/", description="Decrease product quantity")
@@ -39,7 +39,7 @@ async def decrease_product_quantity(user_id: int = Depends(validate_token_and_re
     response = await CartService.decrease_product_quantity(cart_id=user_id, product_id=product_data.product_id)
     if not response:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error decreasing product quantity")
-    return SResponse(**response)
+    return SResponse.model_validate(response)
 
 
 @cart_router.get("/get/", description="Get cart")
@@ -68,4 +68,4 @@ async def apply_promocode(promocode: str, user_id: int = Depends(validate_token_
     response = await CartService.apply_promocode(cart_id=user_id, promocode=promocode)
     if not response:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error applying promocode")
-    return SResponse(**response)
+    return SResponse.model_validate(response)

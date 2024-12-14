@@ -18,46 +18,6 @@ where id = 5;*/
 
 select * from client_order;
 
-CREATE OR REPLACE PROCEDURE create_order_from_cart(
-    p_client_id INT,
-    p_pharmacy_id INT,
-    p_promocode_id INT DEFAULT NULL
-)
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    new_order_id INT;
-	cart_total_price DECIMAL(10, 2);
-BEGIN
-
-    IF NOT EXISTS (SELECT 1 FROM cart WHERE client_id = p_client_id) THEN
-        RAISE EXCEPTION 'No cart found for client with ID %', client_id;
-    END IF;
-
-	SELECT total_price INTO cart_total_price
-    FROM cart
-    WHERE client_id = client_id;
-	
-    --creating new order
-    INSERT INTO client_order (client_id, pharmacy_id, promocode_id, total_price)
-    VALUES (p_client_id, p_pharmacy_id, p_promocode_id, cart_total_price)
-    RETURNING id INTO new_order_id;
-
-    
-    INSERT INTO orderItem (product_id, quantity, order_id)
-    SELECT product_id, quantity, new_order_id
-    FROM cartItem
-    WHERE cart_id = p_client_id;
-
-    
-    DELETE FROM cartItem
-    WHERE cart_id = p_client_id;
-
-
-    RAISE NOTICE 'Order created with ID %', new_order_id;
-END;
-$$;
-
 --DROP PROCEDURE create_order_from_cart(integer,integer,integer);
 --call create_order_from_cart(1, 1, null);
 select * from client_order;
@@ -144,7 +104,7 @@ END;
 $$;
 
 --call remove_from_cart(2, 24);
-call add_to_cart(5, 3, 24);
+--call add_to_cart(5, 3, 24);
 select * from cart;
 select * from logs join action on logs.action_id = action.id;
 
@@ -229,4 +189,75 @@ END;
 $$;
 
 SELECT 	* from cart;
-call apply_promocode(24, 'WINTR2024');
+--call apply_promocode(24, 'WINTR2024');
+
+CREATE OR REPLACE PROCEDURE create_order_from_cart(
+    p_client_id INT,
+    p_pharmacy_id INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    new_order_id INT;
+    cart_total_price DECIMAL(10, 2);
+    p_promocode_id INT DEFAULT NULL;
+BEGIN
+    -- Проверяем, существует ли корзина для клиента
+    IF NOT EXISTS (SELECT 1 FROM cart WHERE client_id = p_client_id) THEN
+        RAISE EXCEPTION 'No cart found for client with ID %', p_client_id;
+    END IF;
+
+    -- Получаем общую стоимость корзины
+    SELECT total_price 
+    INTO cart_total_price
+    FROM cart
+    WHERE client_id = p_client_id;
+
+    -- Получаем ID промокода, если он применён
+    SELECT promocode_id 
+    INTO p_promocode_id
+    FROM cart
+    WHERE client_id = p_client_id;
+
+    -- Создаём новый заказ
+    INSERT INTO client_order (client_id, pharmacy_id, promocode_id, total_price)
+    VALUES (p_client_id, p_pharmacy_id, p_promocode_id, cart_total_price)
+    RETURNING id INTO new_order_id;
+
+    -- Переносим товары из корзины в заказ
+    INSERT INTO orderItem (product_id, quantity, order_id)
+    SELECT product_id, quantity, new_order_id
+    FROM cartItem
+    WHERE cart_id = p_client_id;
+
+    -- Очищаем корзину клиента
+    DELETE FROM cartItem
+    WHERE cart_id = p_client_id;
+	
+    -- Уведомление о создании заказа
+    RAISE NOTICE 'Order created with ID %', new_order_id;
+END;
+$$;
+call create_order_from_cart(24, 2);
+select * from cart;
+
+select 
+			cart.client_id as cart_id,
+			total_price,
+			promocode.code as promocode,
+			promocode.discount as discount,
+			p.id as product_id,
+			p.name as product,
+			p.price as price,
+			cartItem.quantity as quantity
+			from cart 
+			left JOIN cartitem on cartItem.cart_id = cart.client_id
+			left join product p on p.id = cartItem.product_id
+			left join promocode on promocode.id = cart.promocode_id
+			WHERE cart.client_id = 24;
+select * from client_order;
+
+select id from client_order
+where client_id = 24
+order by order_date desc
+limit 1 

@@ -66,6 +66,7 @@ class SStockInfo(BaseModel):
     product_type: str = Field(..., description="Тип продукта", example="Medicine")
     in_stock: int | None = Field(..., description="Количество продукта", example=2)
     price: float | None = Field(..., description="Цена продукта", example=10.0)
+    pharmacy_id: int | None = Field(..., description="ID аптеки", example=1)
     pharmacy_street: str | None = Field(..., description="Улица аптеки", example="Main Street")
     pharmacy_building: int | None = Field(..., description="Здание аптеки", example=10)
     manufacturer_name: str = Field(..., description="Название производителя", example="Pharma Inc.")

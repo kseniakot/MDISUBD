@@ -141,7 +141,8 @@ class ProductRepository(BaseRepository):
                             m.name AS manufacturer,
                             m.country AS country,
                             p.id AS product_id,
-                            p.price AS price
+                            p.price AS price,
+                            ph.id AS pharmacy_id
                         FROM 
                             product p
                         JOIN 
@@ -174,7 +175,9 @@ class ProductRepository(BaseRepository):
                         "manufacturer_name": row[5],
                         "manufacturer_country": row[6],
                         "id": row[7],
-                        "price": row[8]
+                        "price": row[8],
+                        "pharmacy_id": row[9]
+
                     })
                 return stock_info_list
         except SQLAlchemyError as e:
@@ -192,7 +195,8 @@ class ProductRepository(BaseRepository):
                             m.name AS manufacturer,
                             m.country AS country,
                             p.id AS product_id,
-                            p.price AS price
+                            p.price AS price,
+                            ph.id AS pharmacy_id
                     FROM 
                         product p
                     LEFT JOIN 
@@ -222,12 +226,14 @@ class ProductRepository(BaseRepository):
                     "product_name": row[0],
                     "product_type": row[1],
                     "in_stock": row[2],
+                    "pharmacy_id": row[9],
                     "pharmacy_street": row[3],
                     "pharmacy_building": row[4],
                     "manufacturer_name": row[5],
                     "manufacturer_country": row[6],
                     "id": row[7],
-                    "price": row[8]
+                    "price": row[8],
+
                 })
             return stock_info_list
 

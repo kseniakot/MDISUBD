@@ -227,8 +227,8 @@ BEGIN
 	INSERT INTO action(name, description, table_name)
 	VALUES ('INSERT', 'client added product to the cart', 'cartIitem')
 	returning id into new_action_id;
-	INSERT INTO logs (action_id, client_id, new_value)
-    VALUES (new_action_id, NEW.cart_id, NEW.id);
+	INSERT INTO logs (action_id, client_id, row_id, new_value)
+    VALUES (new_action_id, NEW.cart_id, NEW.id, NEW.quantity);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -242,12 +242,14 @@ CREATE OR REPLACE FUNCTION log_update_quantity()
 RETURNS TRIGGER AS $$
 DECLARE
 new_action_id INT;
+
 BEGIN
+	
 	INSERT INTO action(name, description, table_name)
 	VALUES ('UPDATE', 'client updated product quantity', 'cartIitem')
 	returning id into new_action_id;
-	INSERT INTO logs (action_id, client_id, new_value)
-    VALUES (new_action_id, NEW.cart_id, NEW.id);
+	INSERT INTO logs (action_id, client_id, row_id, new_value, old_value)
+    VALUES (new_action_id, NEW.cart_id, NEW.id, NEW.quantity, OLD.quantity);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -266,8 +268,8 @@ BEGIN
 	INSERT INTO action(name, description, table_name)
 	VALUES ('DELETE', 'client deleted product from cart', 'cartIitem')
 	returning id into new_action_id;
-	INSERT INTO logs (action_id, client_id, new_value)
-    VALUES (new_action_id, OLD.cart_id, OLD.id);
+	INSERT INTO logs (action_id, client_id, row_id, old_value, new_value)
+    VALUES (new_action_id, OLD.cart_id, OLD.id, old.quantity, null);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -286,7 +288,7 @@ BEGIN
 	INSERT INTO action(name, description, table_name)
 	VALUES ('INSERT', 'new client registered', 'client')
 	returning id into new_log_id;
-    INSERT INTO logs (action_id, client_id, new_value)
+    INSERT INTO logs (action_id, client_id, row_id)
     VALUES (new_log_id, NEW.id, NEW.id);
     RETURN NEW;
 END;
@@ -370,5 +372,29 @@ ORDER BY
     p.name;
 
 
+
+
+CREATE OR REPLACE FUNCTION log_create_order()
+RETURNS TRIGGER AS $$
+DECLARE
+new_action_id INT;
+BEGIN
+	INSERT INTO action(name, description, table_name)
+	VALUES ('INSERT', 'client created new order', 'client_order')
+	returning id into new_action_id;
+	INSERT INTO logs (action_id, client_id, row_id)
+    VALUES (new_action_id, NEW.client_id, NEW.id);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+/*
+CREATE TRIGGER log_create_order_trigger
+AFTER INSERT ON client_order
+FOR EACH ROW
+EXECUTE FUNCTION log_create_order();
+
+*/
 select * from logs
 join action on action.id = logs.action_id;
+--select * from orderItem;
+

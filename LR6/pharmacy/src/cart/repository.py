@@ -52,7 +52,7 @@ class CartRepository(BaseRepository):
                             cartItem.quantity as quantity
                             from cart 
                             left JOIN cartitem on cartItem.cart_id = cart.client_id
-                            join product p on p.id = cartItem.product_id
+                            left join product p on p.id = cartItem.product_id
                             left join promocode on promocode.id = cart.promocode_id
                             WHERE cart.client_id = :cart_id;""")
         try:

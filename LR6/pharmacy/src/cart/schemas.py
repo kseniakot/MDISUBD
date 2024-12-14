@@ -20,18 +20,18 @@ class SResponse(BaseModel):
 
 
 class ProductInfo(BaseModel):
-    product_id: int = Field(..., description="ID of the product", example=101)
-    product_name: str = Field(..., description="Name of the product", example="Vitamin C")
-    quantity: int = Field(..., description="Quantity of the product", example=2)
-    price: float = Field(..., description="Price of the product", example=15.50)
+    product_id: int | None = Field(..., description="ID of the product", example=101)
+    product_name: str | None = Field(..., description="Name of the product", example="Vitamin C")
+    quantity: int | None = Field(..., description="Quantity of the product", example=2)
+    price: float | None = Field(..., description="Price of the product", example=15.50)
 
 
 class CartInfo(BaseModel):
     cart_id: int = Field(..., description="ID of the cart (client ID)", example=101)
-    total_price: float = Field(..., description="Total price of the cart", example=250.50)
+    total_price: float | None = Field(..., description="Total price of the cart", example=250.50)
     promocode: str | None = Field(None, description="Applied promocode, if any", example="SAVE10")
     discount: float | None = Field(None, description="Discount applied via promocode", example=15.0)
-    products: List[ProductInfo] = Field(..., description="List of products in the cart")
+    products: List[ProductInfo] | None = Field(..., description="List of products in the cart")
 
 
 class SPromoCode(BaseModel):
