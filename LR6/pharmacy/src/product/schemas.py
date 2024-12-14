@@ -77,3 +77,11 @@ class SProductType(BaseModel):
     name: str = Field(..., max_length=120, example='Medicine',
                       description="Product type name")
 
+
+class SStatistics(BaseModel):
+    model_config = ConfigDict(from_attributes=True, extra='forbid')
+    first_name: str = Field(..., description="First name", example="John")
+    last_name: str = Field(..., description="Last name", example="Doe")
+    email: EmailStr = Field(..., description="Email", example="example@example.com")
+    product_name: str = Field(..., description="Product name", example="Vitamin C")
+    purchase_count: int = Field(..., description="Purchase count", example=5)

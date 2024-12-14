@@ -23,6 +23,7 @@ oauth2_scheme = LoggingOAuth2PasswordBearer(
     scopes={
         "admin": "Admin access",
         "employee": "Employee access",
+        "client": "Client access",
     },
 )
 
@@ -106,8 +107,8 @@ async def validate_token_and_return_id(token: str = Depends(oauth2_scheme)):
         )
         user_id: int = payload.get("id")
 
-        if id is None:
+        if user_id is None:
             raise credentials_exception
     except InvalidTokenError:
         raise credentials_exception
-    return id
+    return user_id

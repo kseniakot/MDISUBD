@@ -48,7 +48,7 @@ async def login_for_access_token(
             data={"sub": client.email,
                   "id": client.id},
 
-            user_role=None,
+            user_role="client",
             expires_delta=access_token_expires,
         )
         refresh_token = create_access_token(

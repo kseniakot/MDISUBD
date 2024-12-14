@@ -234,6 +234,59 @@ class ProductRepository(BaseRepository):
             return None
 
 
+    @classmethod
+    async def get_statistics(cls, session: AsyncSession):
+        query = text(f"""WITH product_counts AS (
+                                SELECT
+                                    c.first_name,
+                                    c.last_name,
+                                    c.email, 
+                                    p.name AS product_name,
+                                    COUNT(oi.product_id) OVER (PARTITION BY c.id, p.id) AS purchase_count
+                                FROM 
+                                    client c
+                                JOIN client_order co ON c.id = co.client_id
+                                JOIN orderItem oi ON co.id = oi.order_id
+                                JOIN product p ON oi.product_id = p.id
+                            ), ranked_products AS (
+                                SELECT
+                                    first_name,
+                                    last_name,
+                                    email, 
+                                    product_name,
+                                    purchase_count,
+                                    ROW_NUMBER() OVER (PARTITION BY first_name, last_name ORDER BY purchase_count DESC) AS rank
+                                FROM 
+                                    product_counts
+                            )
+                            SELECT 
+                                first_name,
+                                last_name,
+                                email, 
+                                product_name,
+                                purchase_count
+                            FROM 
+                                ranked_products
+                            WHERE 
+                                rank = 1;""")
+        try:
+            rows = (await session.execute(query)).fetchall()
+            if rows:
+                statistics = []
+                for row in rows:
+                    statistics.append({
+                        "first_name": row[0],
+                        "last_name": row[1],
+                        "email": row[2],
+                        "product_name": row[3],
+                        "purchase_count": row[4]
+                    })
+                return statistics
+        except SQLAlchemyError as e:
+            print(f"Error getting statistics: {e}")
+            return None
+
+
 class ManufacturerRepository(BaseRepository):
     __tablename__ = "manufacturer"
 

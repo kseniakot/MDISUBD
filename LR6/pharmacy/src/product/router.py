@@ -4,7 +4,7 @@ from src.auth.auth import role_required
 from src.product.service import ProductService, ProductTypeService
 from fastapi import HTTPException, status, Depends, Request
 from src.auth.auth import get_password_hash
-from src.product.schemas import SProductInfo, SProductCreate, SPurchaseInfo, SStockInfo, SProductType
+from src.product.schemas import SProductInfo, SProductCreate, SPurchaseInfo, SStockInfo, SProductType, SStatistics
 
 product_router = APIRouter(prefix="/products", tags=["Manage products"])
 
@@ -96,8 +96,7 @@ async def get_products_purchases(product_id: int,
 
 @product_router.get("/products/stock/{product_name}", response_model=list[SStockInfo],
                     description="Get stock info")
-async def get_stock_info(product_name: str,
-                         security_scopes=Security(role_required, scopes=["admin", "employee"])):
+async def get_stock_info(product_name: str):
     infos = await ProductService.get_stock_info(product_name=product_name.strip())
     if not infos:
         raise HTTPException(
@@ -129,3 +128,15 @@ async def get_all_product_types() -> list[SProductType]:
             detail="Product types not found"
         )
     return [SProductType.model_validate(product_type.to_dict()) for product_type in product_types]
+
+
+@product_router.get("/products/statistics", response_model=list[SStatistics],
+                    description="Get statistics")
+async def get_statistics(security_scopes=Security(role_required, scopes=["employee"])) -> list[SStatistics]:
+    statistics = await ProductService.get_statistics()
+    if not statistics:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Statistics not found"
+        )
+    return statistics
