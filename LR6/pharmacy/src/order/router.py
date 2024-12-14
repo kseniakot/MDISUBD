@@ -6,4 +6,4 @@ from fastapi import HTTPException, status, Depends, Request
 from src.auth.auth import get_password_hash
 from src.product.schemas import SProductInfo, SProductCreate, SPurchaseInfo, SStockInfo, SProductType
 
-product_router = APIRouter(prefix="/order", tags=["Manage orders"])
+order_router = APIRouter(prefix="/order", tags=["Manage orders"])

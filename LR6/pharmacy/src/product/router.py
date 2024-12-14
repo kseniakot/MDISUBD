@@ -4,7 +4,8 @@ from src.auth.auth import role_required
 from src.product.service import ProductService, ProductTypeService
 from fastapi import HTTPException, status, Depends, Request
 from src.auth.auth import get_password_hash
-from src.product.schemas import SProductInfo, SProductCreate, SPurchaseInfo, SStockInfo, SProductType, SStatistics
+from src.product.schemas import (SProductInfo, SProductCreate, SPurchaseInfo,
+                                 SStockInfo, SProductType, SStatistics, SPriceFilter)
 
 product_router = APIRouter(prefix="/products", tags=["Manage products"])
 
@@ -108,8 +109,8 @@ async def get_stock_info(product_name: str):
 
 @product_router.get("/products/stock", response_model=list[SStockInfo],
                     description="Get stock info")
-async def get_stock_info():
-    infos = await ProductService.get_all_stock_info()
+async def get_stock_info(price_filter: SPriceFilter = Depends()):
+    infos = await ProductService.get_all_stock_info(price_filter=price_filter.dict())
     if not infos:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

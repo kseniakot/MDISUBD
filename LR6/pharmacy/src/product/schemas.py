@@ -68,7 +68,7 @@ class SStockInfo(BaseModel):
     price: float | None = Field(..., description="Цена продукта", example=10.0)
     pharmacy_street: str | None = Field(..., description="Улица аптеки", example="Main Street")
     pharmacy_building: int | None = Field(..., description="Здание аптеки", example=10)
-    manufacturer_name: str  = Field(..., description="Название производителя", example="Pharma Inc.")
+    manufacturer_name: str = Field(..., description="Название производителя", example="Pharma Inc.")
     manufacturer_country: str = Field(..., description="Страна производителя", example="USA")
 
 
@@ -85,3 +85,8 @@ class SStatistics(BaseModel):
     email: EmailStr = Field(..., description="Email", example="example@example.com")
     product_name: str = Field(..., description="Product name", example="Vitamin C")
     purchase_count: int = Field(..., description="Purchase count", example=5)
+
+
+class SPriceFilter(BaseModel):
+    min_price: float | None = Field(None, description="Price from", example=10.0)
+    max_price: float | None = Field(None, description="Price to", example=100.0)

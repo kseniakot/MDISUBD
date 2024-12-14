@@ -50,8 +50,8 @@ class ProductService:
 
     @staticmethod
     @connection
-    async def get_all_stock_info(session: AsyncSession):
-        result = await ProductRepository.get_all_stock_info(session)
+    async def get_all_stock_info(session: AsyncSession, price_filter: dict | None = None):
+        result = await ProductRepository.get_all_stock_info(session, price_filter)
         return result
 
     @staticmethod

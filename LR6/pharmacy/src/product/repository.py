@@ -182,7 +182,7 @@ class ProductRepository(BaseRepository):
             return []
 
     @classmethod
-    async def get_all_stock_info(cls, session: AsyncSession):
+    async def get_all_stock_info(cls, session: AsyncSession, price_filter: dict | None = None):
         query = text(f"""SELECT  
                         p.name AS product_name,
                             pt.name AS type,
@@ -207,13 +207,15 @@ class ProductRepository(BaseRepository):
                         product_type pt ON p.product_type_id = pt.id
                      JOIN 
                         manufacturer m ON p.manufacturer_id = m.id
+                    WHERE 
+                        (COALESCE(:min_price, -1) = -1 OR p.price >= :min_price) AND
+                        (COALESCE(:max_price, 1e10) = 1e10 OR p.price <= :max_price)
                     ORDER BY 
                         p.name;
                     """)
         try:
 
-            rows = (await session.execute(query)).fetchall()
-            print(rows)
+            rows = (await session.execute(query, price_filter)).fetchall()
             stock_info_list = []
             for row in rows:
                 stock_info_list.append({
