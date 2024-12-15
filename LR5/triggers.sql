@@ -67,13 +67,13 @@ order by cart_id;*/
 
 --RECALCULATES QUANTITY OF PRODUCTS IN PHARMACY AFTER CLIENT CREATES OR REMOVES ORDER ITEM
 
-/*
+
 CREATE OR REPLACE FUNCTION update_product_instance()
 RETURNS TRIGGER AS $$
 BEGIN
     IF TG_OP = 'INSERT' THEN
         UPDATE product_instance
-        SET quantity = quantity - NEW.quantity
+        SET quantity = GREATEST(quantity - NEW.quantity, 0)
         WHERE product_id = NEW.product_id AND pharmacy_id = (SELECT pharmacy_id FROM client_order WHERE id = NEW.order_id);
 		RETURN NEW;
     ELSIF TG_OP = 'DELETE' THEN
@@ -82,10 +82,9 @@ BEGIN
         WHERE product_id = OLD.product_id AND pharmacy_id = (SELECT pharmacy_id FROM client_order WHERE id = OLD.order_id);
 		RETURN OLD;
     END IF;
-   RAISE NOTICE 'Hererere';
 END;
 $$ LANGUAGE plpgsql;
-*/
+
 
 /*
 CREATE TRIGGER update_product_instance_trigger
@@ -396,5 +395,6 @@ EXECUTE FUNCTION log_create_order();
 */
 select * from logs
 join action on action.id = logs.action_id;
---select * from orderItem;
+select * from product_instance;
 
+--update product_instance set quantity = 1 where id = 50;

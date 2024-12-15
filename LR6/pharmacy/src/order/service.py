@@ -31,7 +31,7 @@ class OrderService:
 
     @staticmethod
     @connection
-    async def change_order_status(order_data: dict, session: AsyncSession):
-        new_order_data = await OrderRepository.change_order_status(session, order_data)
+    async def change_order_status(order_data: dict, employee_id: int, session: AsyncSession):
+        new_order_data = await OrderRepository.change_order_status(session, order_data, employee_id)
         return new_order_data
 

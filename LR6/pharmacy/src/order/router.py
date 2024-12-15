@@ -61,8 +61,9 @@ async def get_all_pharmacy_orders(pharmacy_id: int | None = None,
 
 @order_router.put("/change_status/", description="Change order status", response_model=SChangeOrderStatus)
 async def change_order_status(order_data=Depends(SChangeOrderStatus),
+                              employee_id: int = Depends(validate_token_and_return_id),
                               security_scopes=Security(role_required, scopes=["employee"])):
-    new_order_data = await OrderService.change_order_status(order_data=order_data.model_dump())
+    new_order_data = await OrderService.change_order_status(order_data=order_data.model_dump(), employee_id=employee_id)
     if not new_order_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -36,8 +36,8 @@ class OrderRepository(BaseRepository):
                             address.building,
                             promocode.code AS promocode_name, 
                             promocode.discount AS promocode_discount,
-                            client_order.status AS status,
                             pharmacy.id AS pharmacy_id,
+                            client_order.status AS status,
                             client_order.order_date AS order_date
                         FROM 
                             orderItem oi
@@ -56,25 +56,9 @@ class OrderRepository(BaseRepository):
 
         try:
             result = (await session.execute(query, {"order_id": order_id})).fetchall()
-            order = SOrderDetail(
-                order_id=result[0][0],
-                total_price=result[0][1],
-                pharmacy_id=result[0][11],
-                street=result[0][6],
-                building=result[0][7],
-                promocode_name=result[0][8],
-                promocode_discount=result[0][9],
-                status=result[0][10],
-                order_date=result[0][12].date(),
-                product=[])
-            for row in result:
-                order.product.append(SProductDetail(
-                    product_id=row[2],
-                    product_name=row[3],
-                    product_price=row[4],
-                    quantity=row[5]
-                ))
-            return order
+            if not result:
+                return None
+            return cls._parse_orders(result).pop()
 
         except SQLAlchemyError as e:
             print(f"Error getting order: {e}")
@@ -85,6 +69,8 @@ class OrderRepository(BaseRepository):
         query = text(f"""SELECT * FROM get_order_details(:user_id);""")
         try:
             result = (await session.execute(query, {"user_id": user_id})).fetchall()
+            if not result:
+                return []
             return cls._parse_orders(result)
 
         except SQLAlchemyError as e:
@@ -96,7 +82,8 @@ class OrderRepository(BaseRepository):
         query = text(f"""SELECT * FROM get_pharmacy_order_details(:pharmacy_id);""")
         try:
             result = (await session.execute(query, {"pharmacy_id": pharmacy_id})).fetchall()
-
+            if not result:
+                return []
             return cls._parse_orders(result)
 
         except SQLAlchemyError as e:
@@ -134,9 +121,13 @@ class OrderRepository(BaseRepository):
         return list(orders_dict.values())
 
     @classmethod
-    async def change_order_status(cls, session: AsyncSession, order_data: dict):
+    async def change_order_status(cls, session: AsyncSession, order_data: dict, employee_id: int):
+        config_query = text(f"""SELECT set_config('app.employee_id', :employee_id, true);""")
         query = text(f"""call update_order_status(:order_id, :status);""")
+        order_data["status"] = order_data["status"].value
+        print(order_data, employee_id)
         try:
+            await session.execute(config_query, {"employee_id": f"{employee_id}"})
             await session.execute(query, order_data)
             await session.commit()
             return order_data

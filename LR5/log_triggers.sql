@@ -6,15 +6,14 @@ ADD COLUMN client_id INT REFERENCES client(id);
 select * from action;
 CREATE OR REPLACE FUNCTION log_update_order_status()
 RETURNS TRIGGER AS $$
+DECLARE
+new_action_id INT;
 BEGIN
-    INSERT INTO logs (employee_id, action_id, action_date, old_value, new_value)
-    VALUES (
-        current_setting('app.employee_id')::INT, 
-        (SELECT id FROM action WHERE name = 'UPDATE' AND table_name = 'client_order'), 
-        CURRENT_TIMESTAMP,
-		OLD.status,
-		NEW.status
-    );
+    INSERT INTO action(name, description, table_name)
+	VALUES ('UPDATE', 'employee changed order_status', 'client_order')
+	returning id into new_action_id;
+	INSERT INTO logs (action_id, employee_id, client_id, row_id, new_value, old_value)
+    VALUES (new_action_id, current_setting('app.employee_id')::INT, NEW.client_id, NEW.id, NEW.status, OLD.status);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -27,6 +26,8 @@ FOR EACH ROW
 EXECUTE FUNCTION log_update_order_status();
 
 */
+SELECT set_config('app.employee_id', '1', true);
+update client_order set status = 'completed' where id = 48;
 
 CREATE OR REPLACE FUNCTION log_insert_order()
 RETURNS TRIGGER AS $$

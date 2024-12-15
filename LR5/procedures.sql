@@ -22,34 +22,57 @@ select * from client_order;
 --call create_order_from_cart(1, 1, null);
 select * from client_order;
 
-
-CREATE OR REPLACE FUNCTION get_order_details(p_order_id INT)
+DROP FUNCTION get_order_details(integer);
+CREATE OR REPLACE FUNCTION get_order_details(p_client_id INT DEFAULT NULL)
 RETURNS TABLE (
-    id INT,
-    product_name VARCHAR(100),
-    quantity INT,
     order_id INT,
-	street VARCHAR(100),
-	building INT
+    total_price DECIMAL(10,2),
+    product_id INT,
+    product_name VARCHAR(100),
+    product_price DECIMAL(10,2),
+    quantity INT,
+    street VARCHAR(100),
+    building INT,
+    promocode_name VARCHAR(100),
+    promocode_discount INT,
+	pharmacy_id INT,
+	order_status VARCHAR(50),
+	order_date timestamp without time zone
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT 
-        oi.id,
-        product.name,
-        oi.quantity,
+	SELECT 
         oi.order_id,
-		address.street,
-		address.building
-    FROM orderItem oi
-	JOIN product ON product.id = oi.product_id
-	JOIN client_order ci ON ci.id = p_order_id
-	JOIN pharmacy ON pharmacy.id = ci.pharmacy_id
-	JOIN address ON address.id = pharmacy.address_id
-    WHERE oi.order_id = p_order_id;
-	
+        client_order.total_price,
+        product.id AS product_id,
+        product.name AS product_name,
+        product.price * (1 - COALESCE(promocode.discount, 0) / 100) AS product_price,
+        oi.quantity,
+        address.street,
+        address.building,
+        promocode.code AS promocode_name, 
+        promocode.discount AS promocode_discount,
+		client_order.pharmacy_id AS pharmacy_id,
+		status AS order_status,
+		client_order.order_date AS order_date
+    FROM 
+        orderItem oi
+    JOIN 
+        client_order ON client_order.id = oi.order_id
+    JOIN 
+        product ON product.id = oi.product_id
+    JOIN 
+        pharmacy ON pharmacy.id = client_order.pharmacy_id
+    JOIN 
+        address ON address.id = pharmacy.address_id
+    LEFT JOIN 
+        promocode ON promocode.id = client_order.promocode_id 
+    WHERE 
+        p_client_id IS NULL OR client_order.client_id = p_client_id;
+    
 END;
 $$ LANGUAGE plpgsql;
+
 
 select * from client_order;
 SELECT * FROM get_order_details(14);
@@ -206,6 +229,11 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM cart WHERE client_id = p_client_id) THEN
         RAISE EXCEPTION 'No cart found for client with ID %', p_client_id;
     END IF;
+	
+	 -- Проверяем, есть ли товары в корзине
+    IF NOT EXISTS (SELECT 1 FROM cartItem WHERE cart_id = p_client_id) THEN
+        RAISE EXCEPTION 'Cart is empty ID %', p_client_id;
+    END IF;
 
     -- Получаем общую стоимость корзины
     SELECT total_price 
@@ -238,7 +266,7 @@ BEGIN
     RAISE NOTICE 'Order created with ID %', new_order_id;
 END;
 $$;
-call create_order_from_cart(24, 2);
+--call create_order_from_cart(24, 2);
 select * from cart;
 
 select 
@@ -260,4 +288,38 @@ select * from client_order;
 select id from client_order
 where client_id = 24
 order by order_date desc
-limit 1 
+limit 1 ;
+select * from get_order_details(24);
+
+Drop function get_pharmacy_order_details;
+CREATE OR REPLACE FUNCTION get_pharmacy_order_details(p_pharmacy_id INT DEFAULT NULL)
+RETURNS TABLE (
+    order_id INT,
+    total_price DECIMAL(10,2),
+    product_id INT,
+    product_name VARCHAR(100),
+    product_price DECIMAL(10,2),
+    quantity INT,
+    street VARCHAR(100),
+    building INT,
+    promocode_name VARCHAR(100),
+    promocode_discount INT ,
+	pharmacy_id INT,
+	order_status VARCHAR(50),
+	order_date timestamp without time zone
+) AS $$
+BEGIN
+    RETURN QUERY
+		select * from get_order_details() t
+		WHERE
+			p_pharmacy_id is NULL or p_pharmacy_id = t.pharmacy_id;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT * FROM get_pharmacy_order_details(1);
+
+
+
+--call update_order_status(48, 'completed');
+select * from client_order;
+update client_order set status = 'pending';
