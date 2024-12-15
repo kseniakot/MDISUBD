@@ -35,3 +35,9 @@ class OrderService:
         new_order_data = await OrderRepository.change_order_status(session, order_data, employee_id)
         return new_order_data
 
+    @staticmethod
+    @connection
+    async def delete_order(order_id: int, employee_id: int, session: AsyncSession):
+        order = await OrderRepository.delete_order(session, order_id=order_id, employee_id=employee_id)
+        return order
+

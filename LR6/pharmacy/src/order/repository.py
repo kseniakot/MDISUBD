@@ -133,3 +133,20 @@ class OrderRepository(BaseRepository):
             return order_data
         except SQLAlchemyError as e:
             print(f"Error changing order status: {e}")
+
+    @classmethod
+    async def delete_order(cls, session: AsyncSession, order_id: int, employee_id: int):
+        query = text(f"""delete from client_order where id = :order_id;""")
+        config_query = text(f"""SELECT set_config('app.employee_id', :employee_id, true);""")
+        check_query = text("SELECT 1 FROM client_order WHERE id = :order_id;")
+        try:
+            result = await session.execute(check_query, {"order_id": order_id})
+            order_exists = result.scalar()
+            if not order_exists:
+                raise ValueError(f"Order with ID {order_id} does not exist.")
+            await session.execute(config_query, {"employee_id": f"{employee_id}"})
+            await session.execute(query, {"order_id": order_id})
+            await session.commit()
+            return {"order_id": order_id}
+        except SQLAlchemyError as e:
+            print(f"Error deleting order: {e}")

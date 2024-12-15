@@ -26,8 +26,6 @@ FOR EACH ROW
 EXECUTE FUNCTION log_update_order_status();
 
 */
-SELECT set_config('app.employee_id', '1', true);
-update client_order set status = 'completed' where id = 48;
 
 CREATE OR REPLACE FUNCTION log_insert_order()
 RETURNS TRIGGER AS $$
@@ -112,4 +110,25 @@ UPDATE product
 SET price = 10.05
 WHERE id = 5;*/
 
+CREATE OR REPLACE FUNCTION log_delete_order()
+RETURNS TRIGGER AS $$
+DECLARE
+new_action_id INT;
+BEGIN
+    INSERT INTO action(name, description, table_name)
+	VALUES ('DELETE', 'employee deleted order', 'client_order')
+	returning id into new_action_id;
+	INSERT INTO logs (action_id, employee_id, client_id, row_id)
+    VALUES (new_action_id, current_setting('app.employee_id')::INT, OLD.client_id, OLD.id);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+/*
+CREATE TRIGGER log_delete_order_trigger
+AFTER DELETE
+ON client_order
+FOR EACH ROW
+EXECUTE FUNCTION log_delete_order();
+*/
 

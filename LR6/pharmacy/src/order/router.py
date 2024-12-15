@@ -70,3 +70,22 @@ async def change_order_status(order_data=Depends(SChangeOrderStatus),
             detail="Error changing order status",
         )
     return SChangeOrderStatus.model_validate(new_order_data)
+
+
+@order_router.delete("/delete/", description="Delete order", response_model=SCreateOrderResponse)
+async def delete_order(order_id: int, user_id: int = Depends(validate_token_and_return_id),
+                       employee_id: int = Depends(validate_token_and_return_id),
+                       security_scopes=Security(role_required, scopes=["employee"])):
+    try:
+        order = await OrderService.delete_order(order_id=order_id, employee_id=employee_id)
+        if not order:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Error deleting order",
+            )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": str(e)},
+        )
+    return SCreateOrderResponse.model_validate(order)
