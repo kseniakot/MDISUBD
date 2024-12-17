@@ -27,7 +27,7 @@ class CartRepository(BaseRepository):
             await session.commit()
             return {"id": cart_id}
         except SQLAlchemyError as e:
-            print(f"Error removing product from cart: {e}")
+            print(f"No product with id {product_id} in the cart")
 
     @classmethod
     async def decrease_product_quantity(cls, session: AsyncSession, cart_id: int, product_id: int):
@@ -37,7 +37,7 @@ class CartRepository(BaseRepository):
             await session.commit()
             return {"id": cart_id}
         except SQLAlchemyError as e:
-            print(f"Error decreasing product quantity: {e}")
+            print(f"No product with id {product_id} in the cart")
 
     @classmethod
     async def get_cart(cls, session: AsyncSession, cart_id: int):

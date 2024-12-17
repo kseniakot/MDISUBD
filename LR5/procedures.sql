@@ -262,6 +262,9 @@ BEGIN
     DELETE FROM cartItem
     WHERE cart_id = p_client_id;
 	
+	UPDATE cart SET promocode_id = null
+	WHERE client_id = p_client_id;
+	
     -- Уведомление о создании заказа
     RAISE NOTICE 'Order created with ID %', new_order_id;
 END;
@@ -321,5 +324,5 @@ SELECT * FROM get_pharmacy_order_details(1);
 
 
 --call update_order_status(48, 'completed');
-select * from client_order;
-update client_order set status = 'pending';
+select * from promocode;
+

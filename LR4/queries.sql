@@ -212,7 +212,7 @@ SELECT * FROM client;
 SELECT status, client_id, order_date, promocode_id, total_price, pharmacy_id 
 FROM order_source;*/
 
-SELECT * FROM orders_y2024;
+--SELECT * FROM orders_y2024;
 /*
 CREATE TABLE manufacturer_usa PARTITION OF manufacturer
     FOR VALUES IN ('USA');
@@ -375,51 +375,14 @@ select * from orderItem;
 
 /*Insert into orderItem (product_id, quantity, order_id)
 values (5, 2, 2);*/
-select * from client_order
-join client on client.id = client_order.client_id;
- --5 --2 --2
- WITH product_counts AS (
-    SELECT
-        c.first_name,
-        c.last_name,
-        p.name AS product_name,
-        COUNT(oi.product_id) OVER (PARTITION BY c.id, p.id) AS purchase_count
-    FROM 
-        client c
-    JOIN client_order co ON c.id = co.client_id
-    JOIN orderItem oi ON co.id = oi.order_id
-    JOIN product p ON oi.product_id = p.id
-), ranked_products AS (
-    SELECT
-        first_name,
-        last_name,
-        product_name,
-        purchase_count,
-        ROW_NUMBER() OVER (PARTITION BY first_name, last_name ORDER BY purchase_count DESC) AS rank
-    FROM 
-        product_counts
-)
-SELECT 
-    first_name,
-    last_name,
-    product_name,
-    purchase_count
-FROM 
-    ranked_products
-WHERE 
-    rank = 1;
+
 	
-select * from orderItem;
-select * from client_order
-join client on client.id = client_order.client_id;
-
-Insert into orderItem (product_id, quantity, order_id)
-values (5, 2, 2);
-
- WITH product_counts AS (
+	--//////////////
+	WITH product_counts AS (
     SELECT
         c.first_name,
         c.last_name,
+        c.email, 
         p.name AS product_name,
         COUNT(oi.product_id) OVER (PARTITION BY c.id, p.id) AS purchase_count
     FROM 
@@ -431,6 +394,7 @@ values (5, 2, 2);
     SELECT
         first_name,
         last_name,
+        email, 
         product_name,
         purchase_count,
         ROW_NUMBER() OVER (PARTITION BY first_name, last_name ORDER BY purchase_count DESC) AS rank
@@ -440,9 +404,16 @@ values (5, 2, 2);
 SELECT 
     first_name,
     last_name,
+    email, 
     product_name,
     purchase_count
 FROM 
     ranked_products
 WHERE 
     rank = 1;
+select * from employee;
+
+select * from pharmacy
+join address on address.id = pharmacy.address_id;
+
+select * from product where price between 0 and 1000;

@@ -3,41 +3,55 @@
 --Recalculate total price in cart whenever
 --item is added or removed or updated
 
-/*CREATE OR REPLACE FUNCTION update_cart_total()
+CREATE OR REPLACE FUNCTION update_cart_total()
 RETURNS TRIGGER AS $$
 DECLARE
     old_total_price DECIMAL(10, 2);
     new_total_price DECIMAL(10, 2);
+    discount INT;
+    target_cart_id INT;
 BEGIN
+    target_cart_id := COALESCE(NEW.cart_id, OLD.cart_id);
 
-	SELECT total_price INTO old_total_price
+    SELECT COALESCE(promo.discount, 0)
+    INTO discount
     FROM cart
-    WHERE client_id = COALESCE(NEW.cart_id, OLD.cart_id);
-	
+    LEFT JOIN promocode promo ON cart.promocode_id = promo.id
+    WHERE cart.client_id = target_cart_id;
+
+    SELECT total_price INTO old_total_price
+    FROM cart
+    WHERE client_id = target_cart_id;
+
     UPDATE cart
     SET total_price = (
-        SELECT COALESCE(SUM(ci.quantity * p.price), 0)
+        SELECT COALESCE(SUM(ci.quantity * p.price * (1 - discount / 100.0)), 0)
         FROM cartItem ci
         JOIN product p ON ci.product_id = p.id
-        WHERE ci.cart_id = COALESCE(NEW.cart_id, OLD.cart_id) 
+        WHERE ci.cart_id = target_cart_id
     )
-    WHERE cart.client_id = COALESCE(NEW.cart_id, OLD.cart_id);
-	RAISE NOTICE 'Value of NEW.quantity: %', NEW.quantity;
-	
-	SELECT total_price INTO new_total_price
-    FROM cart
-    WHERE client_id = COALESCE(NEW.cart_id, OLD.cart_id);
+    WHERE cart.client_id = target_cart_id;
 
+  
+    SELECT total_price INTO new_total_price
+    FROM cart
+    WHERE client_id = target_cart_id;
+
+   
+    RAISE NOTICE 'Discount applied: %', discount;
     RAISE NOTICE 'Total price before update: %', old_total_price;
     RAISE NOTICE 'Total price after update: %', new_total_price;
-	
-    RETURN CASE
-        WHEN TG_OP = 'DELETE' THEN OLD
-        ELSE NEW
-    END;
+
+    
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    ELSE
+        RETURN NEW;
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
-*/
+
+
 
 /*
 CREATE TRIGGER recalculate_cart_total_on_insert_or_update

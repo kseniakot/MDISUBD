@@ -132,3 +132,29 @@ FOR EACH ROW
 EXECUTE FUNCTION log_delete_order();
 */
 
+
+CREATE OR REPLACE FUNCTION log_apply_promocode()
+RETURNS TRIGGER AS $$
+DECLARE
+new_action_id INT;
+BEGIN
+    INSERT INTO action(name, description, table_name)
+	VALUES ('UPDATE', 'client applied promocode', 'cart')
+	returning id into new_action_id;
+	INSERT INTO logs (action_id, client_id, row_id, new_value, old_value)
+    VALUES (new_action_id, NEW.client_id, NEW.client_id, NEW.promocode_id, OLD.promocode_id);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+/*
+CREATE TRIGGER log_apply_promocode
+AFTER UPDATE of promocode_id
+ON cart
+FOR EACH ROW
+EXECUTE FUNCTION log_apply_promocode();
+*/
+
+
+
+
